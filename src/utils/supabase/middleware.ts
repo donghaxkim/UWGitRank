@@ -44,6 +44,16 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     const { pathname } = request.nextUrl
+
+    // If Supabase redirected the OAuth code to the wrong path (e.g. /?code=...),
+    // forward it to /auth/callback so the code exchange actually runs.
+    const code = request.nextUrl.searchParams.get('code')
+    if (code && !pathname.startsWith('/auth/callback')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/callback'
+        return NextResponse.redirect(url)
+    }
+
     const isAuthCallback = pathname.startsWith('/auth/callback')
     const isAuthConfirm = pathname.startsWith('/auth/confirm')
     const isLandingPage = pathname === '/'
@@ -53,12 +63,12 @@ export async function updateSession(request: NextRequest) {
     const isProfile = pathname.startsWith('/profile')
 
     // Public routes that don't need any auth check
-    if (isLeaderboard || isProfile || isAuthCallback || isAuthConfirm) {
+    if (isProfile || isAuthCallback || isAuthConfirm) {
         return supabaseResponse
     }
 
-    // If not logged in and trying to access protected routes (not landing page)
-    if (!user && !isLandingPage) {
+    // If not logged in and trying to access protected routes (not landing page or leaderboard)
+    if (!user && !isLandingPage && !isLeaderboard) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
         return NextResponse.redirect(url)

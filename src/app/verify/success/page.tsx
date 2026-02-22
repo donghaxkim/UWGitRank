@@ -62,14 +62,14 @@ export default async function VerificationSuccessPage() {
                         Verification Successful
                     </h1>
                     <p className="text-muted-foreground">
-                        You're now a verified member of the Waterloo GitHub community.
+                        You're now a verified member of the Waterloo GitRank community.
                     </p>
                 </div>
 
                 <Card className="border-border shadow-xl overflow-hidden">
                     <div className="h-2 bg-green-500" />
                     <CardHeader>
-                        <CardTitle className="text-xl">Welcome Aboard!</CardTitle>
+                        <CardTitle className="text-xl">Welcome!</CardTitle>
                         <CardDescription>
                             Your stats will now be actively synced and displayed on the leaderboard.
                         </CardDescription>
@@ -81,7 +81,7 @@ export default async function VerificationSuccessPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-semibold">Rankings are live</p>
-                                <p className="text-xs text-muted-foreground">See how you compare to other UW devs.</p>
+                                <p className="text-xs text-muted-foreground">See where you stand on the leaderboard.</p>
                             </div>
                         </div>
 

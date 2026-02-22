@@ -5,6 +5,13 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
 async function getOrigin() {
+    // Prefer an explicit env var so the URL is always the canonical domain.
+    // On Vercel, x-forwarded-host can return a preview-deployment hostname that
+    // isn't in the Supabase redirect-URL allowlist, which silently breaks email sending.
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+    }
+
     const headerList = await headers()
     const origin = headerList.get('origin')
     if (origin) return origin

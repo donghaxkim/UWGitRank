@@ -86,14 +86,13 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
         </div>
 
         {programs.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <button
               onClick={() => setProgramFilter(null)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                programFilter === null
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-zinc-800 text-muted-foreground hover:text-foreground"
-              }`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${programFilter === null
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-zinc-200 text-muted-foreground hover:text-foreground"
+                }`}
             >
               All
             </button>
@@ -103,11 +102,10 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
                 onClick={() =>
                   setProgramFilter(programFilter === p ? null : p)
                 }
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                  programFilter === p
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-zinc-800 text-muted-foreground hover:text-foreground"
-                }`}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${programFilter === p
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-zinc-200 text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 <span className="hidden md:inline">{p}</span>
                 <span className="md:hidden">{shortProgram(p)}</span>
@@ -117,19 +115,19 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-card overflow-hidden">
+      <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
+            <TableRow className="border-zinc-200 hover:bg-transparent">
               <TableHead className="w-[72px]">Rank</TableHead>
               <TableHead>Student</TableHead>
               <TableHead>Program</TableHead>
-              <TableHead className="text-right">Impact Score</TableHead>
+              <TableHead className="text-right">GitRank Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow className="border-zinc-800 hover:bg-transparent">
+              <TableRow className="border-zinc-200 hover:bg-transparent">
                 <TableCell
                   colSpan={4}
                   className="h-24 text-center text-muted-foreground"
@@ -141,7 +139,7 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
               filtered.map((entry) => (
                 <TableRow
                   key={entry.username}
-                  className="border-zinc-800 hover:bg-muted/30 transition-colors"
+                  className="border-zinc-200 hover:bg-muted/30 transition-colors"
                 >
                   {/* Rank */}
                   <TableCell className="font-bold text-lg">
@@ -177,7 +175,7 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
                         alt={entry.username}
                         width={32}
                         height={32}
-                        className="rounded-full border border-zinc-800 transition-opacity group-hover:opacity-80"
+                        className="rounded-full border border-zinc-200 transition-opacity group-hover:opacity-80"
                       />
                       <span className="font-medium transition-colors group-hover:text-yellow-500 group-hover:underline underline-offset-4">
                         {entry.username}

@@ -1,10 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
-import { Trophy, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { signInWithGithub } from "@/app/auth/actions";
 import { LeaderboardTable } from "./leaderboard-table";
 import type { LeaderboardEntry } from "./leaderboard-table";
+import { Github } from "lucide-react";
 
 export default async function LeaderboardPage() {
   const supabase = await createClient();
@@ -32,23 +33,24 @@ export default async function LeaderboardPage() {
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="font-bold text-xl tracking-tight flex items-center gap-2"
+            className="font-bold text-xl tracking-tight flex items-center gap-2.5 hover:opacity-80 transition-opacity"
           >
-            <Trophy className="w-6 h-6 text-primary" />
+            <div className="w-9 h-9 bg-black rounded-full flex items-center justify-center">
+              <Github className="w-5 h-5 text-[#EAB308]" />
+            </div>
             <span>GitRank</span>
           </Link>
 
           <div className="flex items-center gap-4">
-            {!user ? (
+            <Link href="/about">
+              <Button size="sm" variant="ghost" className="text-zinc-600">
+                How it Works
+              </Button>
+            </Link>
+            {!user && (
               <form action={signInWithGithub}>
-                <Button size="sm">Join Leaderboard</Button>
+                <Button size="sm" className="bg-[#EAB308] text-black hover:bg-[#D9A307]">Join GitRank</Button>
               </form>
-            ) : (
-              <Link href="/verify">
-                <Button size="sm" variant="outline">
-                  Verification Status
-                </Button>
-              </Link>
             )}
           </div>
         </div>
@@ -59,7 +61,7 @@ export default async function LeaderboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
           <p className="text-muted-foreground flex items-center gap-2 text-sm">
             <Users className="w-4 h-4" />
-            Waterloo Impact Score Rankings
+            GitHub Rankings
           </p>
         </div>
 
