@@ -49,7 +49,10 @@ export default async function LeaderboardPage() {
             </Link>
             {!user && (
               <form action={signInWithGithub}>
-                <Button size="sm" className="bg-[#EAB308] text-black hover:bg-[#D9A307]">Join GitRank</Button>
+                <Button size="sm" className="bg-[#EAB308] text-black hover:bg-[#D9A307] flex items-center gap-2">
+                  <Github className="w-4 h-4" />
+                  Join GitRank
+                </Button>
               </form>
             )}
           </div>

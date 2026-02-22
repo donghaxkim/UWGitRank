@@ -68,10 +68,11 @@ export default async function Home() {
             <Button
               type="submit"
               size="lg"
-              className="h-14 px-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 shadow-[0_0_0_3px_#EAB308] transition-all active:scale-95 text-base font-semibold"
+              className="h-14 px-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 shadow-[0_0_0_3px_#EAB308] transition-all active:scale-95 text-base font-semibold flex items-center gap-3"
             >
-              View your GitHub rank
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <Github className="w-5 h-5 text-[#EAB308]" />
+              Sign in with GitHub to continue
+              <ArrowRight className="ml-1 w-5 h-5 opacity-70" />
             </Button>
           </form>
         )}
