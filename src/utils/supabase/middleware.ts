@@ -67,8 +67,10 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse
     }
 
-    // If not logged in and trying to access protected routes (not landing page or leaderboard)
-    if (!user && !isLandingPage && !isLeaderboard) {
+    // If not logged in and trying to access protected routes (not landing page or leaderboard).
+    // /verify/success is also exempt: the session may still be propagating from the
+    // /auth/confirm redirect, and the page itself handles the null-user case.
+    if (!user && !isLandingPage && !isLeaderboard && !isVerifySuccess) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
         return NextResponse.redirect(url)

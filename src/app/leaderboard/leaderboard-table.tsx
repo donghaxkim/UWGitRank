@@ -56,6 +56,7 @@ const TROPHY_COLORS: Record<number, string> = {
 export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
   const [query, setQuery] = useState("");
   const [programFilter, setProgramFilter] = useState<string | null>(null);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   // Unique programs present in the data
   const programs = Array.from(
@@ -69,24 +70,41 @@ export function LeaderboardTable({ data }: { data: LeaderboardEntry[] }) {
     if (programFilter && entry.program !== programFilter) {
       return false;
     }
+    if (verifiedOnly && !entry.is_verified) {
+      return false;
+    }
     return true;
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search username..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-10"
-          />
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search username..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <button
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${verifiedOnly
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-zinc-200 text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            <BadgeCheck className="w-3.5 h-3.5" />
+            Verified only
+          </button>
         </div>
 
         {programs.length > 0 && (
           <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground font-medium mr-1">Program:</span>
             <button
               onClick={() => setProgramFilter(null)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${programFilter === null

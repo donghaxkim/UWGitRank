@@ -33,7 +33,7 @@ export default async function LeaderboardPage() {
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="font-bold text-xl tracking-tight flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+            className="font-bold text-xl tracking-tight flex items-center gap-2.5"
           >
             <div className="w-9 h-9 bg-black rounded-full flex items-center justify-center">
               <Github className="w-5 h-5 text-[#EAB308]" />

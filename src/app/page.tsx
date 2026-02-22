@@ -29,7 +29,7 @@ export default async function Home() {
     <div className="min-h-screen bg-[#f2f2f2] text-zinc-900 selection:bg-yellow-100 flex flex-col items-center justify-center p-6">
 
       {/* Top Left Branding */}
-      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2.5">
         <div className="w-9 h-9 bg-black rounded-full flex items-center justify-center">
           <Github className="w-5 h-5 text-[#EAB308]" />
         </div>

@@ -9,8 +9,27 @@ export default async function VerificationSuccessPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Session may not have propagated yet (edge case: link opened in a different
+    // browser than the one with the original GitHub session).  The OTP was
+    // already verified and the profile updated by /auth/confirm, so show a
+    // friendly success screen instead of looping back to the landing page.
     if (!user) {
-        return redirect('/')
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4">
+                <main className="max-w-md w-full animate-in fade-in zoom-in duration-500 text-center space-y-6">
+                    <div className="flex justify-center text-green-500">
+                        <CheckCircle2 className="w-16 h-16" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight">Email Verified!</h1>
+                    <p className="text-muted-foreground">
+                        Your @uwaterloo.ca address has been confirmed. Sign in to access the leaderboard.
+                    </p>
+                    <Button asChild className="w-full gap-2 py-6 text-lg">
+                        <Link href="/">Sign In</Link>
+                    </Button>
+                </main>
+            </div>
+        )
     }
 
     const email = user.email

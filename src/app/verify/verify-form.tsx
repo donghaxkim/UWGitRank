@@ -31,7 +31,7 @@ export function VerifyForm() {
                     </p>
                 </div>
                 <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
-                    Didn't get it? Try again
+                    Didn't get it? Try again.
                 </Button>
             </div>
         )
