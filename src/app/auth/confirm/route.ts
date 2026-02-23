@@ -49,34 +49,39 @@ export async function GET(request: NextRequest) {
     if (!error) {
       // Mark profile as verified now that the @uwaterloo.ca email is confirmed.
       if (data.user) {
-        const verifiedEmail = data.user.email;
-        const githubUsername = (data.user.user_metadata?.user_name || data.user.user_metadata?.preferred_username) as string | undefined;
+        try {
+          const verifiedEmail = data.user.email;
+          const githubUsername = (data.user.user_metadata?.user_name || data.user.user_metadata?.preferred_username) as string | undefined;
 
-        await prisma.profile.upsert({
-          where: { id: data.user.id },
-          create: {
-            id: data.user.id,
-            username: githubUsername || verifiedEmail?.split('@')[0] || 'unknown',
-            githubUsername,
-            fullName: data.user.user_metadata?.full_name as string | undefined,
-            avatarUrl: data.user.user_metadata?.avatar_url as string | undefined,
-            email: verifiedEmail,
-            isVerified: true,
-          },
-          update: {
-            isVerified: true,
-            email: verifiedEmail,
-            githubUsername,
-          },
-        });
+          await prisma.profile.upsert({
+            where: { id: data.user.id },
+            create: {
+              id: data.user.id,
+              username: githubUsername || verifiedEmail?.split('@')[0] || 'unknown',
+              githubUsername,
+              fullName: data.user.user_metadata?.full_name as string | undefined,
+              avatarUrl: data.user.user_metadata?.avatar_url as string | undefined,
+              email: verifiedEmail,
+              isVerified: true,
+            },
+            update: {
+              isVerified: true,
+              email: verifiedEmail,
+              githubUsername,
+            },
+          });
 
-        // Immediately sync GitHub data so user appears on leaderboard
-        if (githubUsername) {
-          try {
-            await syncSingleUser(data.user.id, githubUsername);
-          } catch (err) {
-            console.error('[auth/confirm] Sync failed:', err);
+          // Immediately sync GitHub data so user appears on leaderboard
+          if (githubUsername) {
+            try {
+              await syncSingleUser(data.user.id, githubUsername);
+            } catch (err) {
+              console.error('[auth/confirm] Sync failed:', err);
+            }
           }
+        } catch (err) {
+          console.error('[auth/confirm] Profile upsert failed:', err);
+          // Continue to redirect — the OTP was verified, profile can be created later
         }
       }
 

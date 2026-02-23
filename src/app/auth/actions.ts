@@ -152,34 +152,39 @@ export async function verifyOtpCode(email: string, token: string) {
     // Upsert profile with is_verified = true and github_username
     const githubUsername = (user.user_metadata?.user_name || user.user_metadata?.preferred_username) as string | undefined
 
-    await prisma.profile.upsert({
-        where: { id: user.id },
-        create: {
-            id: user.id,
-            username: githubUsername || verifiedEmail.split('@')[0],
-            githubUsername: githubUsername,
-            fullName: user.user_metadata?.full_name as string | undefined,
-            avatarUrl: user.user_metadata?.avatar_url as string | undefined,
-            email: verifiedEmail,
-            isVerified: true,
-        },
-        update: {
-            isVerified: true,
-            email: verifiedEmail,
-            githubUsername: githubUsername,
-        },
-    })
+    try {
+        await prisma.profile.upsert({
+            where: { id: user.id },
+            create: {
+                id: user.id,
+                username: githubUsername || verifiedEmail.split('@')[0],
+                githubUsername: githubUsername,
+                fullName: user.user_metadata?.full_name as string | undefined,
+                avatarUrl: user.user_metadata?.avatar_url as string | undefined,
+                email: verifiedEmail,
+                isVerified: true,
+            },
+            update: {
+                isVerified: true,
+                email: verifiedEmail,
+                githubUsername: githubUsername,
+            },
+        })
 
-    console.log('[verifyOtpCode] Profile verified for user:', user.id, 'email:', verifiedEmail)
+        console.log('[verifyOtpCode] Profile verified for user:', user.id, 'email:', verifiedEmail)
 
-    // Immediately sync GitHub data so the user appears on the leaderboard
-    if (githubUsername) {
-        try {
-            await syncSingleUser(user.id, githubUsername)
-            console.log('[verifyOtpCode] GitHub data synced for:', githubUsername)
-        } catch (err) {
-            console.error('[verifyOtpCode] Sync failed (user will appear after next cron):', err)
+        // Immediately sync GitHub data so the user appears on the leaderboard
+        if (githubUsername) {
+            try {
+                await syncSingleUser(user.id, githubUsername)
+                console.log('[verifyOtpCode] GitHub data synced for:', githubUsername)
+            } catch (err) {
+                console.error('[verifyOtpCode] Sync failed (user will appear after next cron):', err)
+            }
         }
+    } catch (err) {
+        console.error('[verifyOtpCode] Profile upsert failed:', err)
+        return { error: 'Verification succeeded but we could not save your profile. Please try again.' }
     }
 
     return { success: true }

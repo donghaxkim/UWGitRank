@@ -24,13 +24,18 @@ export default async function VerifyStudentPage() {
     return redirect("/");
   }
 
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-    select: { isVerified: true },
-  });
+  try {
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { isVerified: true },
+    });
 
-  if (profile?.isVerified) {
-    return redirect("/leaderboard");
+    if (profile?.isVerified) {
+      return redirect("/leaderboard");
+    }
+  } catch (err) {
+    console.error('[verify] Profile lookup failed:', err);
+    // Continue rendering the verify form — don't crash the page
   }
 
   return (
