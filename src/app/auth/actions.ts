@@ -104,28 +104,50 @@ export async function verifyStudentEmail(prevState: any, formData: FormData) {
     }
 
     const supabase = await createClient()
-    const { error } = await supabase.auth.updateUser({ email })
+
+    console.log('[verifyStudentEmail] Sending OTP to:', email)
+    const { data, error } = await supabase.auth.updateUser({ email })
 
     if (error) {
+        console.error('[verifyStudentEmail] updateUser error:', error)
         return { error: error.message }
     }
 
+    console.log('[verifyStudentEmail] updateUser success, user email:', data.user?.email)
     return { success: true, email, message: 'A 6-digit verification code has been sent to your email.' }
 }
 
-export async function markProfileVerified() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Not authenticated' }
+export async function verifyOtpCode(email: string, token: string) {
+    if (!email || !token || token.length !== 6) {
+        return { error: 'Invalid code' }
     }
 
-    const uwEmail = user.email
-    if (!uwEmail?.endsWith('@uwaterloo.ca')) {
+    const supabase = await createClient()
+
+    // Verify the OTP using the same server-side session that sent it
+    const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email_change',
+    })
+
+    if (error) {
+        console.error('[verifyOtpCode] verifyOtp error:', error)
+        return { error: error.message }
+    }
+
+    // OTP verified — mark profile as verified
+    const user = data.user
+    if (!user) {
+        return { error: 'Verification succeeded but no user returned' }
+    }
+
+    const verifiedEmail = user.email
+    if (!verifiedEmail?.endsWith('@uwaterloo.ca')) {
         return { error: 'Email is not a verified @uwaterloo.ca address' }
     }
 
+    // Upsert profile with is_verified = true
     const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -133,29 +155,30 @@ export async function markProfileVerified() {
         .single()
 
     if (profile) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
             .from('profiles')
             .update({
                 is_verified: true,
-                email: uwEmail,
+                email: verifiedEmail,
             })
             .eq('id', user.id)
 
-        if (error) return { error: error.message }
+        if (updateError) return { error: updateError.message }
     } else {
-        const { error } = await supabase
+        const { error: insertError } = await supabase
             .from('profiles')
             .insert({
                 id: user.id,
-                username: user.user_metadata?.user_name || user.user_metadata?.preferred_username || uwEmail.split('@')[0],
+                username: user.user_metadata?.user_name || user.user_metadata?.preferred_username || verifiedEmail.split('@')[0],
                 full_name: user.user_metadata?.full_name,
                 avatar_url: user.user_metadata?.avatar_url,
-                email: uwEmail,
+                email: verifiedEmail,
                 is_verified: true,
             })
 
-        if (error) return { error: error.message }
+        if (insertError) return { error: insertError.message }
     }
 
+    console.log('[verifyOtpCode] Profile verified for user:', user.id, 'email:', verifiedEmail)
     return { success: true }
 }

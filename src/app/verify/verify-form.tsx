@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { verifyStudentEmail, markProfileVerified } from '@/app/auth/actions'
-import { createClient } from '@/utils/supabase/client'
+import { verifyStudentEmail, verifyOtpCode } from '@/app/auth/actions'
 import { OtpInput } from '@/components/ui/otp-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,26 +71,15 @@ export function VerifyForm() {
         if (otpValue.length !== 6) return
         setError(null)
         startTransition(async () => {
-            const supabase = createClient()
-            const { error: otpError } = await supabase.auth.verifyOtp({
-                email,
-                token: otpValue,
-                type: 'email_change',
-            })
+            const result = await verifyOtpCode(email, otpValue)
 
-            if (otpError) {
+            if (result.error) {
                 setError(
-                    otpError.message === 'Token has expired or is invalid'
+                    result.error === 'Token has expired or is invalid'
                         ? 'Invalid or expired code. Please try again.'
-                        : otpError.message
+                        : result.error
                 )
                 setOtpValue('')
-                return
-            }
-
-            const profileResult = await markProfileVerified()
-            if (profileResult.error) {
-                setError(profileResult.error)
                 return
             }
 
