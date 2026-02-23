@@ -1,7 +1,7 @@
 import { signOut, signInToJoin } from "./auth/actions";
 import { createClient } from "@/utils/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { ArrowRight, Github, Trophy, Users } from "lucide-react";
+import { ArrowRight, Github, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AboutModal } from "@/components/AboutModal";
 import { FadeIn } from "@/components/motion";
@@ -63,18 +63,6 @@ export default async function Home() {
           {user ? (
             <div className="flex flex-col items-center gap-5 w-full">
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                {!isVerified && (
-                  <Button
-                    asChild
-                    size="lg"
-                    className="h-14 px-10 rounded-lg bg-[#EAB308] text-black hover:bg-[#D9A307] transition-all active:scale-95 text-base font-semibold"
-                  >
-                    <Link href="/verify">
-                      <Users className="mr-2 w-5 h-5" />
-                      Join the Leaderboard
-                    </Link>
-                  </Button>
-                )}
                 <Button
                   asChild
                   size="lg"

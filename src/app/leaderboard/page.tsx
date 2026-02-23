@@ -12,42 +12,60 @@ import { Github } from "lucide-react";
 
 export default async function LeaderboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const entries: LeaderboardEntry[] = await fetchLeaderboard();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth check failed — continue as unauthenticated
+  }
+
+  let entries: LeaderboardEntry[] = [];
+  try {
+    entries = await fetchLeaderboard();
+  } catch {
+    // Query failed — show empty leaderboard rather than crashing
+  }
 
   // Track this user as a viewer if they're authenticated but not on the leaderboard
   if (user) {
-    const githubUsername = user.user_metadata?.user_name as string | undefined;
-    const isOnLeaderboard = githubUsername
-      ? entries.some((e) => e.username === githubUsername)
-      : false;
+    try {
+      const githubUsername = user.user_metadata?.user_name as string | undefined;
+      const isOnLeaderboard = githubUsername
+        ? entries.some((e) => e.username === githubUsername)
+        : false;
 
-    if (githubUsername && !isOnLeaderboard) {
-      await prisma.leaderboardViewer.upsert({
-        where: { githubUsername },
-        create: {
-          githubUsername,
-          avatarUrl: (user.user_metadata?.avatar_url as string) ?? null,
-        },
-        update: {
-          lastSeenAt: new Date(),
-          avatarUrl: (user.user_metadata?.avatar_url as string) ?? null,
-        },
-      });
+      if (githubUsername && !isOnLeaderboard) {
+        await prisma.leaderboardViewer.upsert({
+          where: { githubUsername },
+          create: {
+            githubUsername,
+            avatarUrl: (user.user_metadata?.avatar_url as string) ?? null,
+          },
+          update: {
+            lastSeenAt: new Date(),
+            avatarUrl: (user.user_metadata?.avatar_url as string) ?? null,
+          },
+        });
+      }
+    } catch {
+      // Viewer tracking failed — non-critical, continue rendering
     }
   }
 
-  const isVerified = user
-    ? ((
-        await prisma.profile.findUnique({
-          where: { id: user.id },
-          select: { isVerified: true },
-        })
-      )?.isVerified ?? false)
-    : false;
+  let isVerified = false;
+  if (user) {
+    try {
+      const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { isVerified: true },
+      });
+      isVerified = profile?.isVerified ?? false;
+    } catch {
+      // Profile check failed — default to unverified
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
