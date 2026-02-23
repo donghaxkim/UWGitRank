@@ -18,30 +18,35 @@ export default async function Home() {
   let isVerified = false;
 
   if (user) {
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: { isVerified: true },
-    });
-
-    const githubUsername = (user.user_metadata?.user_name || user.user_metadata?.preferred_username) as string | undefined;
-    const isWaterlooEmail = user.email?.endsWith("@uwaterloo.ca");
-    if (isWaterlooEmail && profile && !profile.isVerified) {
-      await prisma.profile.update({
+    try {
+      const profile = await prisma.profile.findUnique({
         where: { id: user.id },
-        data: { isVerified: true, email: user.email, githubUsername },
+        select: { isVerified: true },
       });
-      isVerified = true;
 
-      // Sync GitHub data immediately so user appears on leaderboard
-      if (githubUsername) {
-        try {
-          await syncSingleUser(user.id, githubUsername);
-        } catch (err) {
-          console.error('[home] Auto-verify sync failed:', err);
+      const githubUsername = (user.user_metadata?.user_name || user.user_metadata?.preferred_username) as string | undefined;
+      const isWaterlooEmail = user.email?.endsWith("@uwaterloo.ca");
+      if (isWaterlooEmail && profile && !profile.isVerified) {
+        await prisma.profile.update({
+          where: { id: user.id },
+          data: { isVerified: true, email: user.email, githubUsername },
+        });
+        isVerified = true;
+
+        // Sync GitHub data immediately so user appears on leaderboard
+        if (githubUsername) {
+          try {
+            await syncSingleUser(user.id, githubUsername);
+          } catch (err) {
+            console.error('[home] Auto-verify sync failed:', err);
+          }
         }
+      } else {
+        isVerified = profile?.isVerified ?? false;
       }
-    } else {
-      isVerified = profile?.isVerified ?? false;
+    } catch (err) {
+      console.error('[home] Profile check/update failed:', err);
+      // Continue rendering with isVerified=false rather than crashing the page
     }
   }
 
