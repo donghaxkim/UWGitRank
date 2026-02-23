@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BadgeCheck } from "lucide-react";
+import { Search, BadgeCheck, Linkedin } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,6 +39,11 @@ const FACULTIES: Faculty[] = [
 
 const TIME_WINDOWS: TimeWindow[] = ["7d", "30d", "1y", "all"];
 
+function getDisplayName(entry: LeaderboardEntry): string {
+  const fullName = `${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim();
+  return fullName || entry.username;
+}
+
 export function LeaderboardTable({
   data,
   currentUserUsername,
@@ -74,7 +79,8 @@ export function LeaderboardTable({
       if (query) {
         const q = query.toLowerCase();
         const matchUsername = entry.username.toLowerCase().includes(q);
-        if (!matchUsername) return false;
+        const matchFullName = getDisplayName(entry).toLowerCase().includes(q);
+        if (!matchUsername && !matchFullName) return false;
       }
       if (facultyFilter && getFaculty(entry.program) !== facultyFilter) {
         return false;
@@ -229,12 +235,7 @@ export function LeaderboardTable({
                         </TableCell>
 
                         <TableCell>
-                          <a
-                            href={`https://github.com/${entry.username}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-3 group"
-                          >
+                          <div className="inline-flex items-start gap-3 group">
                             <img
                               src={`https://github.com/${entry.username}.png`}
                               alt={entry.username}
@@ -242,13 +243,34 @@ export function LeaderboardTable({
                               height={32}
                               className="rounded-full border border-zinc-200 transition-opacity group-hover:opacity-80"
                             />
-                            <span className="font-medium transition-colors group-hover:text-yellow-500 group-hover:underline underline-offset-4">
-                              {entry.username}
+                            <span className="min-w-0">
+                              <span className="block font-medium truncate">
+                                {getDisplayName(entry)}
+                              </span>
+                              <a
+                                href={`https://github.com/${entry.username}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block text-xs text-muted-foreground transition-colors hover:text-yellow-600 hover:underline underline-offset-4"
+                              >
+                                @{entry.username}
+                              </a>
+                              {entry.linkedinUrl && (
+                                <a
+                                  href={entry.linkedinUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-1 hidden items-center gap-1 text-xs text-[#0A66C2] hover:underline group-hover:inline-flex"
+                                >
+                                  <Linkedin className="h-3 w-3" />
+                                  <span>LinkedIn</span>
+                                </a>
+                              )}
                             </span>
                             {entry.is_verified && (
                               <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
                             )}
-                          </a>
+                          </div>
                         </TableCell>
 
                         <TableCell className="text-muted-foreground">

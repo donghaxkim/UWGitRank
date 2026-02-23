@@ -2,6 +2,9 @@ export type TimeWindow = "7d" | "30d" | "1y" | "all";
 
 export interface LeaderboardEntry {
   username: string;
+  firstName: string | null;
+  lastName: string | null;
+  linkedinUrl: string | null;
   is_verified: boolean;
   program: string | null;
   stars: number;

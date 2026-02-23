@@ -14,6 +14,11 @@ const PLACE_STYLES: Record<number, { card: string; height: string }> = {
 
 const PLACE_DELAYS: Record<number, number> = { 2: 0, 1: 0.15, 3: 0.3 };
 
+function getDisplayName(entry: RankedEntry): string {
+  const fullName = `${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim();
+  return fullName || entry.username;
+}
+
 function PodiumCard({
   entry,
   place,
@@ -31,7 +36,7 @@ function PodiumCard({
   const tooltipContent = (
     <div className="space-y-2">
       <div className="font-semibold text-white border-b border-zinc-700 pb-1">
-        @{entry.username}
+        {getDisplayName(entry)}
       </div>
       <div className="text-[10px] text-zinc-400">{windowLabel} · Score breakdown</div>
       <div className="space-y-1 font-mono text-xs">
@@ -62,8 +67,19 @@ function PodiumCard({
         className="block text-[10px] text-[#EAB308] hover:underline pt-1"
         onClick={(e) => e.stopPropagation()}
       >
-        View GitHub profile →
+        GitHub: @{entry.username}
       </a>
+      {entry.linkedinUrl && (
+        <a
+          href={entry.linkedinUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-[10px] text-[#0A66C2] hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          LinkedIn profile →
+        </a>
+      )}
     </div>
   );
 
@@ -100,7 +116,7 @@ function PodiumCard({
           {/* Name & score */}
           <div className="text-center min-w-0 max-w-[120px]">
             <div className="font-bold text-sm truncate">
-              {entry.username}
+              {getDisplayName(entry)}
             </div>
             <div className="text-xs font-mono font-semibold mt-0.5 tabular-nums">
               {stats.score.toLocaleString()} pts
