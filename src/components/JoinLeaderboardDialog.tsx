@@ -61,18 +61,27 @@ export function JoinLeaderboardDialog({
           linkedinUrl: form.linkedinUrl.trim() || undefined,
         }),
       })
-      const data = await res.json().catch(() => ({}))
+      const text = await res.text()
+      let data: { error?: string; redirectUrl?: string } = {}
+      try {
+        data = text ? JSON.parse(text) : {}
+      } catch {
+        // Server returned non-JSON (e.g. HTML error page)
+        setError(res.ok ? 'Invalid response from server.' : `Request failed (${res.status}). Check the console or Supabase env vars.`)
+        return
+      }
       if (!res.ok) {
-        setError(data.error || 'Something went wrong. Please try again.')
+        setError(data.error || `Something went wrong (${res.status}). Please try again.`)
         return
       }
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl
         return
       }
-      setError('Something went wrong. Please try again.')
-    } catch {
-      setError('Something went wrong. Please try again.')
+      setError(data.error || 'Something went wrong. Please try again.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      setError(message)
     } finally {
       setSubmitting(false)
     }
