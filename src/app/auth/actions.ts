@@ -181,19 +181,28 @@ export async function verifyOtpCode(email: string, token: string) {
         await doUpsert(userId, preferredUsername)
         console.log('[verifyOtpCode] Profile verified for user:', userId, 'email:', verifiedEmail)
     } catch (err: unknown) {
+        const prismaErr = err as { code?: string; message?: string; meta?: unknown }
+        const code = prismaErr?.code
+        const message = prismaErr?.message ?? String(err)
+        console.error('[verifyOtpCode] Profile upsert failed:', { code, message, meta: prismaErr?.meta })
+
         // P2002 = unique constraint violation (e.g. username already taken)
-        const isUniqueViolation = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002'
+        const isUniqueViolation = code === 'P2002'
         if (isUniqueViolation) {
             const fallbackUsername = `user_${userId.slice(0, 8)}`
             try {
                 await doUpsert(userId, fallbackUsername)
                 console.log('[verifyOtpCode] Profile verified with fallback username for user:', userId)
-            } catch (retryErr) {
-                console.error('[verifyOtpCode] Profile upsert failed (retry):', retryErr)
+            } catch (retryErr: unknown) {
+                const retryPrisma = retryErr as { code?: string; message?: string; meta?: unknown }
+                console.error('[verifyOtpCode] Profile upsert failed (retry):', {
+                    code: retryPrisma?.code,
+                    message: retryPrisma?.message ?? String(retryErr),
+                    meta: retryPrisma?.meta,
+                })
                 return { error: 'Verification succeeded but we could not save your profile. Please try again.' }
             }
         } else {
-            console.error('[verifyOtpCode] Profile upsert failed:', err)
             return { error: 'Verification succeeded but we could not save your profile. Please try again.' }
         }
     }

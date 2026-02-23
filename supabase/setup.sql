@@ -35,8 +35,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- Service role (used by Prisma via direct connection) bypasses RLS, but
--- if you query through Supabase client with anon key you may also need:
+-- Service role (used by Supabase API with service key)
 DO $$ BEGIN
   CREATE POLICY "Service role full access"
     ON public.profiles FOR ALL
@@ -46,6 +45,18 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+-- Backend/Prisma direct connection: allow full access so server-side
+-- profile upsert (e.g. after OTP verification) succeeds. Required when
+-- DATABASE_URL uses a role that does NOT have BYPASSRLS (e.g. pooler or
+-- custom Prisma user without bypassrls).
+DO $$ BEGIN
+  CREATE POLICY "Backend full access to profiles"
+    ON public.profiles FOR ALL
+    TO postgres
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─── 2. Auto-create profile on sign-up ────────────────────────────────────
 -- Trigger function that creates a profiles row when a new auth.users row
