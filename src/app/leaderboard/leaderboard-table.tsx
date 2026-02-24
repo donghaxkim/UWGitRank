@@ -32,9 +32,7 @@ export type { LeaderboardEntry };
 const FACULTIES: Faculty[] = [
   "Engineering",
   "Math",
-  "Environment",
-  "Health",
-  "Arts",
+  "Other",
 ];
 
 const TIME_WINDOWS: TimeWindow[] = ["7d", "30d", "1y", "all"];

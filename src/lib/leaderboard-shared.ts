@@ -83,7 +83,7 @@ export type Faculty =
   | "Math"
   | "Environment"
   | "Health"
-  | "Arts";
+  | "Other";
 
   const FACULTY_MAP: Record<string, Faculty> = {
     // Faculty of Engineering
@@ -106,7 +106,10 @@ export type Faculty =
     "Computer Science": "Math",
     "Mathematics": "Math",
     "Computing and Financial Management": "Math",
-};
+
+    // Other
+    "Other": "Other",
+  };
 
 /** Ordered list of program names for signup dropdown (matches leaderboard faculty mapping). */
 export const PROGRAM_OPTIONS = Object.keys(FACULTY_MAP).sort();
@@ -123,5 +126,5 @@ export function getFaculty(program: string | null): Faculty | null {
     lower.includes("public health")
   )
     return "Health";
-  return "Arts";
+  return "Other";
 }
