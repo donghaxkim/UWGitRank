@@ -329,6 +329,9 @@ export function LeaderboardTable({
                                 <span className="min-w-0">
                                   <span className="block font-medium truncate">
                                     {getDisplayName(entry)}
+                                    {isCurrentUser && (
+                                      <span className="text-primary font-semibold"> (you)</span>
+                                    )}
                                   </span>
                                   <span className="block text-xs text-muted-foreground">
                                     @{entry.username}

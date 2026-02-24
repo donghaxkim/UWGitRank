@@ -22,6 +22,7 @@ function PodiumCard({
   isEndorsed,
   canEndorse,
   onEndorse,
+  isCurrentUser,
 }: {
   entry: RankedEntry;
   place: number;
@@ -29,6 +30,7 @@ function PodiumCard({
   isEndorsed: boolean;
   canEndorse: boolean;
   onEndorse: () => void;
+  isCurrentUser: boolean;
 }) {
   const style = PLACE_STYLES[place];
   const stats = getWindowStats(entry, timeWindow);
@@ -69,6 +71,9 @@ function PodiumCard({
             <div className="font-bold text-sm truncate">
               {`${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim() ||
                 entry.username}
+              {isCurrentUser && (
+                <span className="text-primary font-semibold"> (you)</span>
+              )}
             </div>
             <div className="text-xs font-mono font-semibold mt-0.5 tabular-nums">
               {stats.score.toLocaleString()} pts
@@ -158,6 +163,7 @@ export function Podium({
       isEndorsed: endorsedSet.has(entry.username),
       canEndorse: isVerified && !isCurrentUser && !!currentUserUsername,
       onEndorse: () => onEndorse(entry.username),
+      isCurrentUser,
     };
   }
 
