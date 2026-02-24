@@ -100,6 +100,13 @@ export async function signOut() {
     return redirect('/')
 }
 
+function normalizeOtpSendError(message: string) {
+    if (/only request this after/i.test(message) || /over_email_send_rate_limit/i.test(message)) {
+        return 'Please wait 60 seconds before requesting another code.'
+    }
+    return message
+}
+
 export async function verifyStudentEmail(prevState: any, formData: FormData) {
     const email = formData.get('email') as string
 
@@ -110,29 +117,11 @@ export async function verifyStudentEmail(prevState: any, formData: FormData) {
     const supabase = await createClient()
 
     console.log('[verifyStudentEmail] Sending OTP to:', email)
-    const { data, error } = await supabase.auth.updateUser({ email })
+    const { error } = await supabase.auth.updateUser({ email })
 
     if (error) {
         console.error('[verifyStudentEmail] updateUser error:', error)
-        return { error: error.message }
-    }
-
-    const currentEmail = data.user?.email ?? null
-    // resend() for email_change requires the CURRENT user email (not the new one). OAuth users often have no current email.
-    if (currentEmail) {
-        const { error: resendError } = await supabase.auth.resend({
-            type: 'email_change',
-            email: currentEmail,
-        })
-        if (resendError) {
-            console.error('[verifyStudentEmail] resend failed:', resendError)
-        }
-    } else {
-        // OAuth / no current email: trigger send by calling updateUser again (Supabase then sends the OTP to the new email).
-        const { error: secondError } = await supabase.auth.updateUser({ email })
-        if (secondError) {
-            console.error('[verifyStudentEmail] second updateUser failed:', secondError)
-        }
+        return { error: normalizeOtpSendError(error.message) }
     }
 
     console.log('[verifyStudentEmail] success, new email:', email)
@@ -146,25 +135,11 @@ export async function resendVerificationCode(email: string) {
     }
 
     const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    const currentEmail = userData.user?.email ?? null
-
-    if (currentEmail) {
-        const { error } = await supabase.auth.resend({
-            type: 'email_change',
-            email: currentEmail,
-        })
-        if (error) {
-            console.error('[resendVerificationCode] resend error:', error)
-            return { error: error.message }
-        }
-    } else {
-        // OAuth / no current email: resend doesn't work; call updateUser again to trigger sending OTP to the new email.
-        const { error } = await supabase.auth.updateUser({ email })
-        if (error) {
-            console.error('[resendVerificationCode] updateUser error:', error)
-            return { error: error.message }
-        }
+    // For email-change OTPs, calling updateUser({ email }) reliably triggers a new code.
+    const { error } = await supabase.auth.updateUser({ email })
+    if (error) {
+        console.error('[resendVerificationCode] updateUser error:', error)
+        return { error: normalizeOtpSendError(error.message) }
     }
 
     return { success: true, message: 'A new 6-digit code has been sent to your email.' }

@@ -111,8 +111,11 @@ export type Faculty =
     "Other": "Other",
   };
 
-/** Ordered list of program names for signup dropdown (matches leaderboard faculty mapping). */
-export const PROGRAM_OPTIONS = Object.keys(FACULTY_MAP).sort();
+/** Ordered list of program names for signup dropdown (Other last). */
+export const PROGRAM_OPTIONS = Object.keys(FACULTY_MAP)
+  .filter((p) => p !== 'Other')
+  .sort()
+  .concat('Other');
 
 export function getFaculty(program: string | null): Faculty | null {
   if (!program) return null;
