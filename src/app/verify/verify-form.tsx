@@ -73,20 +73,24 @@ export function VerifyForm() {
         if (otpValue.length !== 6) return
         setError(null)
         startTransition(async () => {
-            const result = await verifyOtpCode(email, otpValue)
+            try {
+                const result = await verifyOtpCode(email, otpValue)
 
-            if (result.error) {
-                setError(
-                    result.error === 'Token has expired or is invalid'
-                        ? 'Invalid or expired code. Please try again.'
-                        : result.error
-                )
+                if (result.error) {
+                    setError(
+                        result.error === 'Token has expired or is invalid'
+                            ? 'Invalid or expired code. Please try again.'
+                            : result.error
+                    )
+                    setOtpValue('')
+                    return
+                }
+
+                router.push('/leaderboard?verified=1')
+            } catch {
+                setError('Something went wrong. Please try again.')
                 setOtpValue('')
-                return
             }
-
-            // Redirect to leaderboard with verified=1 so we can show success and their ranking
-            router.push('/leaderboard?verified=1')
         })
     }
 

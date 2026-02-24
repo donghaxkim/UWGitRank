@@ -55,7 +55,6 @@ export default async function VerificationSuccessPage() {
 
   if (isWaterlooEmail) {
     try {
-      // Upsert the profile: create if missing, update if exists
       await prisma.profile.upsert({
         where: { id: user.id },
         create: {
