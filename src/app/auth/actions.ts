@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers, cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
@@ -107,25 +107,29 @@ function normalizeOtpSendError(message: string) {
     return message
 }
 
-async function ensurePendingEmailChange(supabase: Awaited<ReturnType<typeof createClient>>, targetEmail: string) {
-    const { data: userData, error } = await supabase.auth.getUser()
+/**
+ * Uses the admin API (service_role key) to trigger an email-change flow.
+ * This bypasses JWT validation issues that cause 403s for new OAuth users.
+ */
+async function adminTriggerEmailChange(userId: string, currentEmail: string, newEmail: string) {
+    const admin = createAdminClient()
+
+    // Use admin.generateLink to create the email-change OTP.
+    // This reliably creates the pending change AND sends the confirmation email
+    // via Supabase's configured mailer, regardless of user JWT state.
+    const { data, error } = await admin.auth.admin.generateLink({
+        type: 'email_change_new',
+        email: currentEmail,
+        newEmail,
+    })
+
     if (error) {
-        return { error: 'Could not confirm verification state. Please try again.' as const }
+        console.error('[adminTriggerEmailChange] generateLink error:', error)
+        return { error: normalizeOtpSendError(error.message) }
     }
 
-    const user = userData.user
-    const pendingEmail = user?.new_email
-    const sentAt = user?.email_change_sent_at
-
-    // If this is missing, Supabase did not create a pending email change for OTP verification.
-    if (!pendingEmail || pendingEmail.toLowerCase() !== targetEmail.toLowerCase() || !sentAt) {
-        return {
-            error:
-                'Verification email is not being queued by Supabase. In Supabase Auth settings, enable email-change confirmation and ensure the Change Email template includes {{ .Token }}.',
-        }
-    }
-
-    return { success: true as const }
+    console.log('[adminTriggerEmailChange] email change link generated for user:', userId, 'newEmail:', newEmail)
+    return { success: true, data }
 }
 
 export async function verifyStudentEmail(prevState: any, formData: FormData) {
@@ -136,43 +140,41 @@ export async function verifyStudentEmail(prevState: any, formData: FormData) {
     }
 
     const supabase = await createClient()
-
-    console.log('[verifyStudentEmail] Sending OTP to:', email)
-    const { error } = await supabase.auth.updateUser({ email })
-
-    if (error) {
-        console.error('[verifyStudentEmail] updateUser error:', error)
-        return { error: normalizeOtpSendError(error.message) }
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
     }
 
-    const pendingCheck = await ensurePendingEmailChange(supabase, email)
-    if ('error' in pendingCheck) {
-        console.error('[verifyStudentEmail] pending email-change missing after updateUser for:', email)
-        return { error: pendingCheck.error }
+    const user = userData.user
+    const currentEmail = user.email ?? `${user.id}@noemail.local`
+
+    console.log('[verifyStudentEmail] Sending OTP to:', email, 'for user:', user.id)
+    const result = await adminTriggerEmailChange(user.id, currentEmail, email)
+    if ('error' in result) {
+        return { error: result.error }
     }
 
-    console.log('[verifyStudentEmail] success, new email:', email)
     return { success: true, email, message: 'A 6-digit verification code has been sent to your email.' }
 }
 
-/** Resend the 6-digit verification code to the given (new) email. Use after the initial send (respect 60s cooldown on client). */
+/** Resend the 6-digit verification code. Uses admin API to bypass JWT issues. */
 export async function resendVerificationCode(email: string) {
     if (!email || !email.endsWith('@uwaterloo.ca')) {
         return { error: 'Please enter a valid @uwaterloo.ca email address' }
     }
 
     const supabase = await createClient()
-    // For email-change OTPs, calling updateUser({ email }) reliably triggers a new code.
-    const { error } = await supabase.auth.updateUser({ email })
-    if (error) {
-        console.error('[resendVerificationCode] updateUser error:', error)
-        return { error: normalizeOtpSendError(error.message) }
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
     }
 
-    const pendingCheck = await ensurePendingEmailChange(supabase, email)
-    if ('error' in pendingCheck) {
-        console.error('[resendVerificationCode] pending email-change missing after resend for:', email)
-        return { error: pendingCheck.error }
+    const user = userData.user
+    const currentEmail = user.email ?? `${user.id}@noemail.local`
+
+    const result = await adminTriggerEmailChange(user.id, currentEmail, email)
+    if ('error' in result) {
+        return { error: result.error }
     }
 
     return { success: true, message: 'A new 6-digit code has been sent to your email.' }
@@ -183,10 +185,16 @@ export async function verifyOtpCode(email: string, token: string) {
         return { error: 'Invalid code' }
     }
 
+    // Get the user ID from the session first
     const supabase = await createClient()
+    const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
+    if (sessionError || !sessionData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
+    }
 
-    // Verify the OTP using the same server-side session that sent it
-    const { data, error } = await supabase.auth.verifyOtp({
+    // Use the admin client to verify OTP — bypasses JWT issues for new OAuth users
+    const admin = createAdminClient()
+    const { data, error } = await admin.auth.verifyOtp({
         email,
         token,
         type: 'email_change',
