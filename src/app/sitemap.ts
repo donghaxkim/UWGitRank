@@ -15,11 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const profiles = await prisma.profile.findMany({
       where: { isVerified: true },
-      select: { username: true, updatedAt: true },
+      select: { username: true },
     });
     profileRoutes = profiles.map((p) => ({
       url: `${siteUrl}/profile/${p.username}`,
-      lastModified: p.updatedAt,
+      lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.7,
     }));
