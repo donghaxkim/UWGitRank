@@ -67,7 +67,7 @@ function PodiumCard({
             <div className="text-xs font-mono font-semibold mt-0.5 tabular-nums">
               {stats.score.toLocaleString()} pts
             </div>
-            {entry.endorsement_count > 0 && (
+            {(Number(entry.endorsement_count) || 0) > 0 && (
               <div className="flex items-center justify-center gap-0.5 mt-0.5 text-[10px] text-pink-500">
                 <Heart className="h-2.5 w-2.5 fill-pink-500" />
                 <span className="tabular-nums">{entry.endorsement_count}</span>

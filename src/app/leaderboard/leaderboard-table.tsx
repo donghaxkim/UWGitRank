@@ -119,7 +119,7 @@ export function LeaderboardTable({
 
   const getEffectiveCount = useCallback(
     (entry: LeaderboardEntry) =>
-      countOverrides[entry.username] ?? entry.endorsement_count,
+      countOverrides[entry.username] ?? (Number(entry.endorsement_count) || 0),
     [countOverrides],
   );
 

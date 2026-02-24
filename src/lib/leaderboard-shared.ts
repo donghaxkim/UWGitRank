@@ -33,7 +33,8 @@ export function getWindowScore(
   entry: LeaderboardEntry,
   window: TimeWindow,
 ): number {
-  const endorsementBonus = entry.endorsement_count * ENDORSEMENT_WEIGHT;
+  const endorsements = Number(entry.endorsement_count) || 0;
+  const endorsementBonus = endorsements * ENDORSEMENT_WEIGHT;
   switch (window) {
     case "7d":
       return entry.score_7d + endorsementBonus;
@@ -47,34 +48,35 @@ export function getWindowScore(
 }
 
 export function getWindowStats(entry: LeaderboardEntry, window: TimeWindow) {
-  const endorsementBonus = entry.endorsement_count * ENDORSEMENT_WEIGHT;
+  const endorsements = Number(entry.endorsement_count) || 0;
+  const endorsementBonus = endorsements * ENDORSEMENT_WEIGHT;
   switch (window) {
     case "7d":
       return {
         commits: entry.commits_7d,
         prs: entry.prs_7d,
-        endorsements: entry.endorsement_count,
+        endorsements,
         score: entry.score_7d + endorsementBonus,
       };
     case "30d":
       return {
         commits: entry.commits_30d,
         prs: entry.prs_30d,
-        endorsements: entry.endorsement_count,
+        endorsements,
         score: entry.score_30d + endorsementBonus,
       };
     case "1y":
       return {
         commits: entry.commits_1y,
         prs: entry.prs_1y,
-        endorsements: entry.endorsement_count,
+        endorsements,
         score: entry.score_1y + endorsementBonus,
       };
     case "all":
       return {
         commits: entry.commits_all,
         prs: entry.prs_all,
-        endorsements: entry.endorsement_count,
+        endorsements,
         score: entry.score_all + endorsementBonus,
       };
   }
