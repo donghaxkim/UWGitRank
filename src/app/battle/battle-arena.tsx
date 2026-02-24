@@ -46,6 +46,11 @@ function UserCard({
       ? result.winnerEloAfter - result.winnerEloBefore
       : result.loserEloAfter - result.loserEloBefore
     : 0;
+  const displayElo = result
+    ? isWinner
+      ? result.winnerEloAfter
+      : result.loserEloAfter
+    : user.eloRating;
 
   return (
     <motion.div
@@ -93,9 +98,21 @@ function UserCard({
           </a>
           <div className="text-right shrink-0">
             <div className="text-xs text-zinc-400 uppercase tracking-wide">ELO</div>
-            <div className="font-bold text-lg text-zinc-900">
-              {Math.round(user.eloRating)}
-            </div>
+            <motion.div
+              key={Math.round(displayElo)}
+              initial={result ? { scale: 1.2 } : false}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className={`font-bold text-lg ${
+                result
+                  ? isWinner
+                    ? "text-green-600"
+                    : "text-red-500"
+                  : "text-zinc-900"
+              }`}
+            >
+              {Math.round(displayElo)}
+            </motion.div>
           </div>
         </div>
 
