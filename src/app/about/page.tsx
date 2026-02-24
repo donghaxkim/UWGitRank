@@ -4,6 +4,7 @@ import {
   Star,
   GitCommit,
   GitPullRequest,
+  Heart,
   Award,
   Trophy,
   Calculator,
@@ -76,10 +77,16 @@ export default function AboutPage() {
               <span className="text-green-300">commits</span>
               <span className="text-zinc-300"> × 1</span>
             </p>
+            <p>
+              <span className="text-zinc-300 pl-14">+ </span>
+              <span className="text-pink-300">endorsements</span>
+              <span className="text-zinc-300"> × 3</span>
+            </p>
           </div>
           <p className="text-zinc-400 text-sm">
-            Scores are recalculated nightly. Higher weight is given to stars and
-            PRs because they reflect external recognition and meaningful
+            GitHub stats are recalculated nightly. Endorsements update in
+            real-time when peers endorse you. Higher weight is given to stars
+            and PRs because they reflect external recognition and meaningful
             collaboration.
           </p>
         </FadeIn>
@@ -161,6 +168,31 @@ export default function AboutPage() {
                 <li>Private repo commits are not counted</li>
               </ul>
             </StaggerItem>
+
+            {/* Endorsements */}
+            <StaggerItem className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-pink-600">
+                  <Heart className="w-5 h-5" />
+                  <h3 className="font-bold text-zinc-900">Peer Endorsements</h3>
+                </div>
+                <span className="font-mono text-sm font-bold bg-pink-50 border border-pink-200 text-pink-700 px-2.5 py-0.5 rounded-full">
+                  × 3 pts
+                </span>
+              </div>
+              <p className="text-sm text-zinc-500">
+                Endorsements let verified UW students recognize each other.
+                Click the heart icon on the leaderboard to endorse someone
+                whose work you respect. Each endorsement adds{" "}
+                <strong>3 points</strong> to their score.
+              </p>
+              <ul className="text-xs text-zinc-400 space-y-1 pl-4 list-disc">
+                <li>One endorsement per person (toggle on/off)</li>
+                <li>Only verified UW students can endorse</li>
+                <li>You cannot endorse yourself</li>
+                <li>Endorsements apply equally across all time windows</li>
+              </ul>
+            </StaggerItem>
           </StaggerContainer>
         </FadeIn>
 
@@ -183,9 +215,13 @@ export default function AboutPage() {
               <span>Total commits</span>
               <span className="text-green-600 font-semibold">1,204 × 1 = 1,204</span>
             </div>
+            <div className="flex justify-between text-zinc-500">
+              <span>Peer endorsements</span>
+              <span className="text-pink-600 font-semibold">12 × 3 = 36</span>
+            </div>
             <div className="border-t border-zinc-100 pt-3 flex justify-between font-bold text-zinc-900 text-base">
               <span>Rank Score</span>
-              <span className="text-[#EAB308]">9,809</span>
+              <span className="text-[#EAB308]">9,845</span>
             </div>
           </div>
         </FadeIn>

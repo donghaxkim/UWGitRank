@@ -40,7 +40,8 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
       l.score_30d,
       l.commits_1y,
       l.prs_1y,
-      l.score_1y
+      l.score_1y,
+      l.endorsement_count
     FROM public.leaderboard l
     LEFT JOIN public.profiles p
       ON p.username = l.username

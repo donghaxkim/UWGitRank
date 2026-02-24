@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Heart } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import type { RankedEntry, TimeWindow } from "@/lib/leaderboard-shared";
 import { getWindowStats, TIME_WINDOW_LABELS } from "@/lib/leaderboard-shared";
+import { ENDORSEMENT_WEIGHT } from "@/utils/ranking";
 
 const PLACE_STYLES: Record<number, { card: string; height: string }> = {
   1: { card: "card-holographic", height: "h-28" },
@@ -50,6 +52,10 @@ function PodiumCard({
         <div className="flex justify-between gap-4">
           <span className="text-green-300">Commits ×1</span>
           <span>{stats.commits.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-pink-300">Endorsements ×{ENDORSEMENT_WEIGHT}</span>
+          <span>{(stats.endorsements * ENDORSEMENT_WEIGHT).toLocaleString()}</span>
         </div>
         <div className="border-t border-zinc-700 pt-1 flex justify-between gap-4 font-semibold">
           <span>Total</span>
@@ -120,6 +126,12 @@ function PodiumCard({
             <div className="text-xs font-mono font-semibold mt-0.5 tabular-nums">
               {stats.score.toLocaleString()} pts
             </div>
+            {entry.endorsement_count > 0 && (
+              <div className="flex items-center justify-center gap-0.5 mt-0.5 text-[10px] text-pink-500">
+                <Heart className="h-2.5 w-2.5 fill-pink-500" />
+                <span className="tabular-nums">{entry.endorsement_count}</span>
+              </div>
+            )}
           </div>
 
           {/* Pedestal */}

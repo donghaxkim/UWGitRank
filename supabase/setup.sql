@@ -117,7 +117,10 @@ CREATE TABLE IF NOT EXISTS public.github_metrics (
   -- Time-scoped composite scores
   score_7d     DOUBLE PRECISION NOT NULL DEFAULT 0,
   score_30d    DOUBLE PRECISION NOT NULL DEFAULT 0,
-  score_1y     DOUBLE PRECISION NOT NULL DEFAULT 0
+  score_1y     DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+  -- Peer endorsement count (updated by toggleEndorsement server action)
+  endorsement_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- Index: leaderboard sorting by score (descending)
@@ -183,7 +186,71 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 
--- ─── 5. Leaderboard Materialized View ────────────────────────────────────
+-- ─── 5. Endorsements ─────────────────────────────────────────────────────
+-- Verified users can endorse other users (one per voter/target pair).
+
+CREATE TABLE IF NOT EXISTS public.endorsements (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  voter_id        UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  target_user_id  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT endorsements_no_self_endorse CHECK (voter_id != target_user_id),
+  CONSTRAINT endorsements_unique_pair UNIQUE (voter_id, target_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS endorsements_target_user_id_idx
+  ON public.endorsements (target_user_id);
+
+CREATE INDEX IF NOT EXISTS endorsements_voter_id_idx
+  ON public.endorsements (voter_id);
+
+ALTER TABLE public.endorsements ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can read all endorsements"
+    ON public.endorsements FOR SELECT
+    TO authenticated
+    USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Verified users can insert own endorsements"
+    ON public.endorsements FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = voter_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own endorsements"
+    ON public.endorsements FOR DELETE
+    TO authenticated
+    USING (auth.uid() = voter_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Service role full access to endorsements"
+    ON public.endorsements FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Backend full access to endorsements"
+    ON public.endorsements FOR ALL
+    TO postgres
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
+-- ─── 6. Leaderboard Materialized View ────────────────────────────────────
 -- Joins verified profiles with their metrics for fast leaderboard reads.
 -- Refreshed by the sync cron via refresh_leaderboard().
 
@@ -206,7 +273,8 @@ SELECT
   m.score_30d,
   m.commits_1y,
   m.prs_1y,
-  m.score_1y
+  m.score_1y,
+  m.endorsement_count
 FROM public.profiles p
 JOIN public.github_metrics m ON p.id = m.user_id
 WHERE p.is_verified = true;
@@ -220,7 +288,7 @@ GRANT SELECT ON public.leaderboard TO anon;
 GRANT SELECT ON public.leaderboard TO authenticated;
 
 
--- ─── 6. Refresh Function ─────────────────────────────────────────────────
+-- ─── 7. Refresh Function ─────────────────────────────────────────────────
 -- Called by the /api/sync cron route via prisma.$executeRaw.
 
 CREATE OR REPLACE FUNCTION public.refresh_leaderboard()

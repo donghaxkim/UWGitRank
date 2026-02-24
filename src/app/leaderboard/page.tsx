@@ -5,7 +5,7 @@ import { fetchLeaderboard } from "@/lib/leaderboard";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/motion";
 import Link from "next/link";
-import { signOut, signInToView } from "@/app/auth/actions";
+import { signOut, signInToView, fetchUserEndorsements } from "@/app/auth/actions";
 import { LeaderboardTable } from "./leaderboard-table";
 import type { LeaderboardEntry } from "@/lib/leaderboard";
 import { Github } from "lucide-react";
@@ -65,6 +65,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
   }
 
   let isRegistered = false;
+  let isVerified = false;
   if (user) {
     try {
       const profile = await prisma.profile.findUnique({
@@ -77,8 +78,18 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
         profile?.program?.trim(),
       );
       isRegistered = hasSignupFields && Boolean(profile?.isVerified);
+      isVerified = Boolean(profile?.isVerified);
     } catch {
       // Profile check failed — default to unregistered
+    }
+  }
+
+  let endorsedUsernames: string[] = [];
+  if (user && isVerified) {
+    try {
+      endorsedUsernames = await fetchUserEndorsements();
+    } catch {
+      // Non-critical — endorsement buttons will show as un-endorsed
     }
   }
 
@@ -135,8 +146,8 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
               Leaderboard
             </h1>
             <p className="text-muted-foreground text-sm">
-              Waterloo student GitHub rankings · scored by stars, PRs &amp;
-              commits
+              Waterloo student GitHub rankings · scored by stars, PRs,
+              commits &amp; endorsements
             </p>
           </div>
         </FadeIn>
@@ -153,6 +164,8 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             currentUserUsername={
               user?.user_metadata?.user_name as string | undefined
             }
+            isVerified={isVerified}
+            endorsedUsernames={endorsedUsernames}
           />
         </FadeIn>
       </main>

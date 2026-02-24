@@ -2,9 +2,11 @@
 
 import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { headers, cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { syncSingleUser } from '@/lib/sync-user'
+import { refreshLeaderboard } from '@/lib/leaderboard'
 import { generateOtp, sendOtpEmail } from '@/lib/email'
 
 const SIGNUP_PENDING_COOKIE = 'signup_pending'
@@ -358,4 +360,84 @@ export async function verifyOtpCode(email: string, token: string) {
     }
 
     return finalizeVerifiedUser(updatedUser.user)
+}
+
+/**
+ * Toggle an endorsement from the current user to the target user.
+ * Returns the new endorsed state and the target's updated endorsement count.
+ */
+export async function toggleEndorsement(targetUsername: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+        return { error: 'You must be logged in to endorse.' }
+    }
+
+    const voter = await prisma.profile.findUnique({
+        where: { id: data.user.id },
+        select: { id: true, isVerified: true, username: true },
+    })
+    if (!voter?.isVerified) {
+        return { error: 'Only verified UW students can endorse.' }
+    }
+
+    if (voter.username === targetUsername) {
+        return { error: 'You cannot endorse yourself.' }
+    }
+
+    const targetProfile = await prisma.profile.findUnique({
+        where: { username: targetUsername },
+        select: { id: true },
+    })
+    if (!targetProfile) {
+        return { error: 'Target user not found.' }
+    }
+
+    const existing = await prisma.endorsement.findUnique({
+        where: { voterId_targetUserId: { voterId: voter.id, targetUserId: targetProfile.id } },
+    })
+
+    if (existing) {
+        await prisma.endorsement.delete({ where: { id: existing.id } })
+    } else {
+        await prisma.endorsement.create({
+            data: { voterId: voter.id, targetUserId: targetProfile.id },
+        })
+    }
+
+    const count = await prisma.endorsement.count({
+        where: { targetUserId: targetProfile.id },
+    })
+
+    await prisma.githubMetrics.updateMany({
+        where: { userId: targetProfile.id },
+        data: { endorsementCount: count },
+    })
+
+    try {
+        await refreshLeaderboard()
+    } catch {
+        // Non-critical: the materialized view will catch up on next cron sync
+    }
+
+    revalidatePath('/leaderboard')
+    return { endorsed: !existing, count }
+}
+
+/**
+ * Fetch the list of usernames the current user has endorsed.
+ */
+export async function fetchUserEndorsements(): Promise<string[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) return []
+
+    const endorsements = await prisma.endorsement.findMany({
+        where: { voterId: data.user.id },
+        select: { target: { select: { username: true } } },
+    })
+
+    return endorsements
+        .map((e) => e.target.username)
+        .filter((u): u is string => u != null)
 }

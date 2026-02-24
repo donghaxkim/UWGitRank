@@ -1,3 +1,5 @@
+import { ENDORSEMENT_WEIGHT } from "@/utils/ranking";
+
 export type TimeWindow = "7d" | "30d" | "1y" | "all";
 
 export interface LeaderboardEntry {
@@ -20,6 +22,7 @@ export interface LeaderboardEntry {
   commits_1y: number;
   prs_1y: number;
   score_1y: number;
+  endorsement_count: number;
 }
 
 export interface RankedEntry extends LeaderboardEntry {
@@ -30,43 +33,49 @@ export function getWindowScore(
   entry: LeaderboardEntry,
   window: TimeWindow,
 ): number {
+  const endorsementBonus = entry.endorsement_count * ENDORSEMENT_WEIGHT;
   switch (window) {
     case "7d":
-      return entry.score_7d;
+      return entry.score_7d + endorsementBonus;
     case "30d":
-      return entry.score_30d;
+      return entry.score_30d + endorsementBonus;
     case "1y":
-      return entry.score_1y;
+      return entry.score_1y + endorsementBonus;
     case "all":
-      return entry.score_all;
+      return entry.score_all + endorsementBonus;
   }
 }
 
 export function getWindowStats(entry: LeaderboardEntry, window: TimeWindow) {
+  const endorsementBonus = entry.endorsement_count * ENDORSEMENT_WEIGHT;
   switch (window) {
     case "7d":
       return {
         commits: entry.commits_7d,
         prs: entry.prs_7d,
-        score: entry.score_7d,
+        endorsements: entry.endorsement_count,
+        score: entry.score_7d + endorsementBonus,
       };
     case "30d":
       return {
         commits: entry.commits_30d,
         prs: entry.prs_30d,
-        score: entry.score_30d,
+        endorsements: entry.endorsement_count,
+        score: entry.score_30d + endorsementBonus,
       };
     case "1y":
       return {
         commits: entry.commits_1y,
         prs: entry.prs_1y,
-        score: entry.score_1y,
+        endorsements: entry.endorsement_count,
+        score: entry.score_1y + endorsementBonus,
       };
     case "all":
       return {
         commits: entry.commits_all,
         prs: entry.prs_all,
-        score: entry.score_all,
+        endorsements: entry.endorsement_count,
+        score: entry.score_all + endorsementBonus,
       };
   }
 }

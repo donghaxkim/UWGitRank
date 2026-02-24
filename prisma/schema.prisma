@@ -22,7 +22,9 @@ model Profile {
   program         String?
   linkedinUrl     String? @map("linkedin_url")
 
-  githubMetrics GithubMetrics?
+  githubMetrics        GithubMetrics?
+  endorsementsGiven    Endorsement[] @relation("EndorsementVoter")
+  endorsementsReceived Endorsement[] @relation("EndorsementTarget")
 
   @@index([isVerified])
   @@map("profiles")
@@ -52,6 +54,8 @@ model GithubMetrics {
   score7d  Float @default(0) @map("score_7d")
   score30d Float @default(0) @map("score_30d")
   score1y  Float @default(0) @map("score_1y")
+
+  endorsementCount Int @default(0) @map("endorsement_count")
 
   profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -83,4 +87,21 @@ model LeaderboardViewer {
   lastSeenAt     DateTime @default(now()) @updatedAt @map("last_seen_at") @db.Timestamptz
 
   @@map("leaderboard_viewers")
+}
+
+// ─── Endorsements ─────────────────────────────────────────────────
+// Verified users can endorse others (one per voter/target pair).
+model Endorsement {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  voterId       String   @map("voter_id") @db.Uuid
+  targetUserId  String   @map("target_user_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  voter  Profile @relation("EndorsementVoter", fields: [voterId], references: [id], onDelete: Cascade)
+  target Profile @relation("EndorsementTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@unique([voterId, targetUserId], map: "endorsements_unique_pair")
+  @@index([targetUserId])
+  @@index([voterId])
+  @@map("endorsements")
 }
