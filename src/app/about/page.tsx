@@ -6,6 +6,7 @@ import {
   GitCommit,
   GitPullRequest,
   Heart,
+  Swords,
   Award,
   Trophy,
   Calculator,
@@ -90,12 +91,19 @@ export default function AboutPage() {
               <span className="text-pink-300">endorsements</span>
               <span className="text-zinc-300"> × 3</span>
             </p>
+            <p>
+              <span className="text-zinc-300 pl-14">+ </span>
+              <span className="text-zinc-300">(</span>
+              <span className="text-orange-300">ELO</span>
+              <span className="text-zinc-300"> − 1200) × 0.5</span>
+            </p>
           </div>
           <p className="text-zinc-400 text-sm">
             GitHub stats are recalculated nightly. Endorsements update in
-            real-time when peers endorse you. Higher weight is given to stars
-            and PRs because they reflect external recognition and meaningful
-            collaboration.
+            real-time when peers endorse you. ELO rating starts at 1200 and
+            shifts based on community votes in Battle mode. Higher weight is
+            given to stars and PRs because they reflect external recognition
+            and meaningful collaboration.
           </p>
         </FadeIn>
 
@@ -201,6 +209,31 @@ export default function AboutPage() {
                 <li>Endorsements apply equally across all time windows</li>
               </ul>
             </StaggerItem>
+
+            {/* ELO Rating */}
+            <StaggerItem className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-orange-600">
+                  <Swords className="w-5 h-5" />
+                  <h3 className="font-bold text-zinc-900">ELO Rating</h3>
+                </div>
+                <span className="font-mono text-sm font-bold bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-0.5 rounded-full">
+                  (ELO − 1200) × 0.5
+                </span>
+              </div>
+              <p className="text-sm text-zinc-500">
+                ELO is a peer-voted rating determined in{" "}
+                <strong>Battle mode</strong>. Two random profiles are shown
+                side-by-side and the community picks who has the better repos.
+                Winners gain rating, losers drop — just like chess rankings.
+              </p>
+              <ul className="text-xs text-zinc-400 space-y-1 pl-4 list-disc">
+                <li>Everyone starts at 1200 (baseline — no bonus or penalty)</li>
+                <li>Only the difference from 1200 counts toward your score</li>
+                <li>Rating above 1200 adds points, below 1200 subtracts</li>
+                <li>K-factor of 32 — ratings shift quickly early on</li>
+              </ul>
+            </StaggerItem>
           </StaggerContainer>
         </FadeIn>
 
@@ -227,9 +260,13 @@ export default function AboutPage() {
               <span>Peer endorsements</span>
               <span className="text-pink-600 font-semibold">12 × 3 = 36</span>
             </div>
+            <div className="flex justify-between text-zinc-500">
+              <span>ELO bonus (1280 − 1200)</span>
+              <span className="text-orange-600 font-semibold">80 × 0.5 = 40</span>
+            </div>
             <div className="border-t border-zinc-100 pt-3 flex justify-between font-bold text-zinc-900 text-base">
               <span>Rank Score</span>
-              <span className="text-[#EAB308]">9,845</span>
+              <span className="text-[#EAB308]">9,885</span>
             </div>
           </div>
         </FadeIn>

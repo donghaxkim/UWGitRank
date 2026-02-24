@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Leaderboard",
   description:
-    "Live rankings of University of Waterloo students by GitHub open-source contributions — stars, merged PRs, commits & endorsements.",
+    "Live rankings of University of Waterloo students by GitHub open-source contributions — stars, merged PRs, commits, endorsements & ELO.",
   alternates: { canonical: "/leaderboard" },
 };
 import { FadeIn } from "@/components/motion";
@@ -160,7 +160,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             </h1>
             <p className="text-muted-foreground text-sm">
               Waterloo student GitHub rankings · scored by stars, PRs,
-              commits &amp; endorsements
+              commits, endorsements &amp; ELO
             </p>
           </div>
         </FadeIn>

@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import { Trophy, Github, Star, GitCommit, GitPullRequest, Heart, Link as LinkIcon, BadgeCheck, ShieldX } from 'lucide-react'
+import { Trophy, Github, Star, GitCommit, GitPullRequest, Heart, Swords, Link as LinkIcon, BadgeCheck, ShieldX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScaleIn, FadeIn, StaggerContainer, StaggerItem } from '@/components/motion'
 import Link from 'next/link'
-import { ENDORSEMENT_WEIGHT } from '@/utils/ranking'
+import { ENDORSEMENT_WEIGHT, ELO_WEIGHT, ELO_BASELINE } from '@/utils/ranking'
 
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
     const { username } = await params
@@ -37,7 +37,9 @@ export default async function ProfilePage({ params }: { params: { username: stri
     const stars = metrics?.stars ?? 0
     const commits = metrics?.commits ?? 0
     const mergedPrs = metrics?.mergedPrs ?? 0
-    const rankScore = (metrics?.rankScore ?? 0) + endorsements * ENDORSEMENT_WEIGHT
+    const eloRating = metrics?.eloRating ?? ELO_BASELINE
+    const eloBonus = Math.round((eloRating - ELO_BASELINE) * ELO_WEIGHT)
+    const rankScore = (metrics?.rankScore ?? 0) + endorsements * ENDORSEMENT_WEIGHT + eloBonus
 
     return (
         <div className="min-h-screen bg-[#f2f2f2] text-zinc-900">
@@ -115,7 +117,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
                 </FadeIn>
 
                 {/* Stats Grid */}
-                <StaggerContainer stagger={0.1} delay={0.2} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StaggerContainer stagger={0.1} delay={0.2} className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <StaggerItem>
                         <Card className="border-zinc-200 shadow-sm">
                             <CardHeader className="pb-2">
@@ -168,6 +170,20 @@ export default async function ProfilePage({ params }: { params: { username: stri
                             </CardHeader>
                             <CardContent>
                                 <span className="text-2xl font-bold">{endorsements.toLocaleString()}</span>
+                            </CardContent>
+                        </Card>
+                    </StaggerItem>
+
+                    <StaggerItem>
+                        <Card className="border-zinc-200 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-xs font-medium text-zinc-500 flex items-center gap-1.5">
+                                    <Swords className="w-3.5 h-3.5 text-orange-600" />
+                                    ELO Rating
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <span className="text-2xl font-bold">{Math.round(eloRating).toLocaleString()}</span>
                             </CardContent>
                         </Card>
                     </StaggerItem>

@@ -6,11 +6,11 @@ export const ELO_WEIGHT = 0.5;
 export const ELO_BASELINE = 1200;
 
 /**
- * Waterloo GitRank score formula: stars×10 + PRs×5 + commits×1.
- * Used for every time window (7d, 30d, 1y, all). Stars are always all-time;
- * prs and commits are for the specific window when computing windowed scores.
+ * Waterloo GitRank score formula: stars×10 + PRs×5 + commits×1 + endorsements×3 + (ELO−1200)×0.5.
+ * Base score (stars, PRs, commits) is used for every time window (7d, 30d, 1y, all).
+ * Stars are always all-time; PRs and commits are for the specific window.
  *
- * Endorsement points are added separately at the display/sorting layer
+ * Endorsement and ELO bonus are added at the display/sorting layer
  * because they are not time-windowed.
  */
 export function calculateWaterlooScore(stats: {

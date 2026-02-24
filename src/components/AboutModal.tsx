@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "radix-ui";
-import { X, Github, Star, GitPullRequest, GitCommit, Heart } from "lucide-react";
+import { X, Github, Star, GitPullRequest, GitCommit, Heart, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AboutModal() {
@@ -98,10 +98,14 @@ export function AboutModal() {
                 <p>
                   <span className="text-pink-300">endorsements</span> × 3
                 </p>
+                <p>
+                  <span className="text-orange-300">(ELO − 1200)</span> × 0.5
+                </p>
               </div>
               <p className="text-zinc-500 text-xs mt-2">
                 Stars count on non-forked repos you own. GitHub data syncs
-                nightly. Endorsements update in real-time.
+                nightly. Endorsements update in real-time. ELO starts at
+                1200 and changes based on community votes in Battle mode.
               </p>
             </section>
 
@@ -126,6 +130,11 @@ export function AboutModal() {
                 <Heart className="w-4 h-4 text-pink-600 mb-1" />
                 <p className="font-medium text-zinc-900">Endorsements</p>
                 <p className="text-xs text-zinc-500">×3 pts</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-zinc-200 col-span-2">
+                <Swords className="w-4 h-4 text-orange-600 mb-1" />
+                <p className="font-medium text-zinc-900">ELO Rating</p>
+                <p className="text-xs text-zinc-500">(ELO − 1200) × 0.5 pts</p>
               </div>
             </div>
 
