@@ -110,79 +110,11 @@ function normalizeOtpSendError(message: string) {
     return message
 }
 
-export async function verifyStudentEmail(prevState: any, formData: FormData) {
-    const email = formData.get('email') as string
-
-    if (!email || !email.endsWith('@uwaterloo.ca')) {
-        return { error: 'Please enter a valid @uwaterloo.ca email address' }
-    }
-
-    const supabase = await createClient()
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    if (userError || !userData.user) {
-        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
-    }
-
-    console.log('[verifyStudentEmail] Sending OTP to:', email, 'for user:', userData.user.id)
-    const { error } = await supabase.auth.updateUser({ email })
-    if (error) {
-        console.error('[verifyStudentEmail] updateUser error:', error)
-        return { error: normalizeOtpSendError(error.message) }
-    }
-
-    return { success: true, email, message: 'A 6-digit verification code has been sent to your email.' }
-}
-
-/** Resend the 6-digit verification code using the authenticated user session. */
-export async function resendVerificationCode(email: string) {
-    if (!email || !email.endsWith('@uwaterloo.ca')) {
-        return { error: 'Please enter a valid @uwaterloo.ca email address' }
-    }
-
-    const supabase = await createClient()
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    if (userError || !userData.user) {
-        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
-    }
-
-    const { error } = await supabase.auth.updateUser({ email })
-    if (error) {
-        console.error('[resendVerificationCode] updateUser error:', error)
-        return { error: normalizeOtpSendError(error.message) }
-    }
-
-    return { success: true, message: 'A new 6-digit code has been sent to your email.' }
-}
-
-export async function verifyOtpCode(email: string, token: string) {
-    if (!email || !token || token.length !== 6) {
-        return { error: 'Invalid code' }
-    }
-
-    // Get the user ID from the session first
-    const supabase = await createClient()
-    const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
-    if (sessionError || !sessionData.user) {
-        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
-    }
-
-    const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email_change',
-    })
-
-    if (error) {
-        console.error('[verifyOtpCode] verifyOtp error:', error)
-        return { error: error.message }
-    }
-
-    // OTP verified — mark profile as verified
-    const user = data.user
-    if (!user) {
-        return { error: 'Verification succeeded but no user returned' }
-    }
-
+async function finalizeVerifiedUser(user: {
+    id: string
+    email?: string | null
+    user_metadata?: Record<string, unknown> | null
+}) {
     const verifiedEmail = user.email
     if (!verifiedEmail?.endsWith('@uwaterloo.ca')) {
         return { error: 'Email is not a verified @uwaterloo.ca address' }
@@ -241,23 +173,22 @@ export async function verifyOtpCode(email: string, token: string) {
 
     try {
         await doUpsert(userId, preferredUsername)
-        console.log('[verifyOtpCode] Profile verified for user:', userId, 'email:', verifiedEmail)
+        console.log('[finalizeVerifiedUser] Profile verified for user:', userId, 'email:', verifiedEmail)
     } catch (err: unknown) {
         const prismaErr = err as { code?: string; message?: string; meta?: unknown }
         const code = prismaErr?.code
         const message = prismaErr?.message ?? String(err)
-        console.error('[verifyOtpCode] Profile upsert failed:', { code, message, meta: prismaErr?.meta })
+        console.error('[finalizeVerifiedUser] Profile upsert failed:', { code, message, meta: prismaErr?.meta })
 
-        // P2002 = unique constraint violation (e.g. username already taken)
         const isUniqueViolation = code === 'P2002'
         if (isUniqueViolation) {
             const fallbackUsername = `user_${userId.slice(0, 8)}`
             try {
                 await doUpsert(userId, fallbackUsername)
-                console.log('[verifyOtpCode] Profile verified with fallback username for user:', userId)
+                console.log('[finalizeVerifiedUser] Profile verified with fallback username for user:', userId)
             } catch (retryErr: unknown) {
                 const retryPrisma = retryErr as { code?: string; message?: string; meta?: unknown }
-                console.error('[verifyOtpCode] Profile upsert failed (retry):', {
+                console.error('[finalizeVerifiedUser] Profile upsert failed (retry):', {
                     code: retryPrisma?.code,
                     message: retryPrisma?.message ?? String(retryErr),
                     meta: retryPrisma?.meta,
@@ -269,15 +200,134 @@ export async function verifyOtpCode(email: string, token: string) {
         }
     }
 
-    // Immediately sync GitHub data so the user appears on the leaderboard
     if (githubUsername) {
         try {
             await syncSingleUser(user.id, githubUsername)
-            console.log('[verifyOtpCode] GitHub data synced for:', githubUsername)
+            console.log('[finalizeVerifiedUser] GitHub data synced for:', githubUsername)
         } catch (err) {
-            console.error('[verifyOtpCode] Sync failed (user will appear after next cron):', err)
+            console.error('[finalizeVerifiedUser] Sync failed (user will appear after next cron):', err)
         }
     }
 
-    return { success: true }
+    return { success: true as const }
+}
+
+export async function verifyStudentEmail(prevState: any, formData: FormData) {
+    const email = formData.get('email') as string
+
+    if (!email || !email.endsWith('@uwaterloo.ca')) {
+        return { error: 'Please enter a valid @uwaterloo.ca email address' }
+    }
+
+    const supabase = await createClient()
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
+    }
+
+    const currentEmail = userData.user.email?.toLowerCase()
+    const targetEmail = email.toLowerCase()
+    const emailAlreadyMatches = currentEmail === targetEmail
+    const emailConfirmed = Boolean(userData.user.email_confirmed_at)
+
+    // If GitHub already authenticated this exact UW email, no email-change OTP will be sent.
+    // Complete verification immediately instead of blocking the user waiting for a code.
+    if (emailAlreadyMatches && emailConfirmed) {
+        const finalized = await finalizeVerifiedUser(userData.user)
+        if (finalized.error) return finalized
+        return { success: true, email, autoVerified: true }
+    }
+
+    console.log('[verifyStudentEmail] Sending OTP to:', email, 'for user:', userData.user.id, 'currentEmail:', userData.user.email ?? null)
+    const { data: updateData, error } = await supabase.auth.updateUser({ email })
+    if (error) {
+        console.error('[verifyStudentEmail] updateUser error:', error)
+        return { error: normalizeOtpSendError(error.message) }
+    }
+
+    const updatedUser = updateData.user
+    const pendingNewEmail = updatedUser?.new_email?.toLowerCase()
+    const sentAt = updatedUser?.email_change_sent_at ?? null
+    console.log('[verifyStudentEmail] updateUser success:', {
+        userId: updatedUser?.id ?? null,
+        email: updatedUser?.email ?? null,
+        newEmail: updatedUser?.new_email ?? null,
+        emailChangeSentAt: sentAt,
+    })
+
+    // If Supabase accepted the request but did not create an email-change target,
+    // surface it as a hard error instead of claiming success.
+    if (pendingNewEmail !== targetEmail) {
+        return {
+            error: 'Verification email was not queued. Please sign out and log back in with GitHub, then try again.',
+        }
+    }
+
+    return { success: true, email, message: 'A 6-digit verification code has been sent to your email.' }
+}
+
+/** Resend the 6-digit verification code using the authenticated user session. */
+export async function resendVerificationCode(email: string) {
+    if (!email || !email.endsWith('@uwaterloo.ca')) {
+        return { error: 'Please enter a valid @uwaterloo.ca email address' }
+    }
+
+    const supabase = await createClient()
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
+    }
+
+    const currentEmail = userData.user.email
+    if (!currentEmail) {
+        return { error: 'Your session email is missing. Please sign out and log in with GitHub again.' }
+    }
+
+    const { data, error } = await supabase.auth.resend({
+        type: 'email_change',
+        email: currentEmail,
+    })
+    if (error) {
+        console.error('[resendVerificationCode] resend error:', error)
+        return { error: normalizeOtpSendError(error.message) }
+    }
+    console.log('[resendVerificationCode] resend success:', {
+        userId: userData.user.id,
+        currentEmail,
+        targetEmail: email,
+        hasMessageId: Boolean((data as { message_id?: string } | null)?.message_id),
+    })
+
+    return { success: true, message: 'A new 6-digit code has been sent to your email.' }
+}
+
+export async function verifyOtpCode(email: string, token: string) {
+    if (!email || !token || token.length !== 6) {
+        return { error: 'Invalid code' }
+    }
+
+    // Get the user ID from the session first
+    const supabase = await createClient()
+    const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
+    if (sessionError || !sessionData.user) {
+        return { error: 'Your session is invalid. Please sign out and log in with GitHub again.' }
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email_change',
+    })
+
+    if (error) {
+        console.error('[verifyOtpCode] verifyOtp error:', error)
+        return { error: error.message }
+    }
+
+    const user = data.user
+    if (!user) {
+        return { error: 'Verification succeeded but no user returned' }
+    }
+
+    return finalizeVerifiedUser(user)
 }

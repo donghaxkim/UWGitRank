@@ -59,6 +59,8 @@ export function VerifyForm() {
             const result = await verifyStudentEmail(null, formData)
             if (result.error) {
                 setError(result.error)
+            } else if ('autoVerified' in result && result.autoVerified) {
+                router.push('/leaderboard?verified=1')
             } else if (result.success && result.email) {
                 setEmail(result.email)
                 setStep('otp_entry')
