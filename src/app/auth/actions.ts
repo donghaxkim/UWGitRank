@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { syncSingleUser } from '@/lib/sync-user'
 import { refreshLeaderboard } from '@/lib/leaderboard'
 import { generateOtp, sendOtpEmail } from '@/lib/email'
+import { calculateElo } from '@/lib/elo'
 
 const SIGNUP_PENDING_COOKIE = 'signup_pending'
 
@@ -440,4 +441,119 @@ export async function fetchUserEndorsements(): Promise<string[]> {
     return endorsements
         .map((e) => e.target.username)
         .filter((u): u is string => u != null)
+}
+
+export interface MatchupUser {
+    id: string
+    username: string
+    githubUsername: string
+    firstName: string | null
+    lastName: string | null
+    avatarUrl: string | null
+    program: string | null
+    eloRating: number
+}
+
+/**
+ * Get two random verified users for an ELO battle.
+ * Excludes the current user from the matchup.
+ */
+export async function getRandomMatchup(): Promise<{ users: [MatchupUser, MatchupUser] } | { error: string }> {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+        return { error: 'You must be logged in to battle.' }
+    }
+
+    const currentUserId = data.user.id
+
+    const rows = await prisma.$queryRaw<MatchupUser[]>`
+        SELECT
+            p.id,
+            p.username,
+            p.github_username AS "githubUsername",
+            p.first_name AS "firstName",
+            p.last_name AS "lastName",
+            p.avatar_url AS "avatarUrl",
+            p.program,
+            gm.elo_rating AS "eloRating"
+        FROM public.profiles p
+        INNER JOIN public.github_metrics gm ON gm.user_id = p.id
+        WHERE p.is_verified = true
+          AND p.id != ${currentUserId}::uuid
+        ORDER BY RANDOM()
+        LIMIT 2
+    `
+
+    if (rows.length < 2) {
+        return { error: 'Not enough users to create a matchup.' }
+    }
+
+    return { users: [rows[0], rows[1]] }
+}
+
+/**
+ * Submit an ELO vote: the voter picks a winner from a matchup.
+ * Updates both users' ELO ratings and records the match.
+ */
+export async function submitEloVote(winnerId: string, loserId: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+        return { error: 'You must be logged in to vote.' }
+    }
+
+    const voterId = data.user.id
+
+    if (voterId === winnerId || voterId === loserId) {
+        return { error: 'You cannot vote in a matchup that includes yourself.' }
+    }
+
+    if (winnerId === loserId) {
+        return { error: 'Invalid matchup.' }
+    }
+
+    const [winnerMetrics, loserMetrics] = await Promise.all([
+        prisma.githubMetrics.findUnique({ where: { userId: winnerId }, select: { eloRating: true } }),
+        prisma.githubMetrics.findUnique({ where: { userId: loserId }, select: { eloRating: true } }),
+    ])
+
+    if (!winnerMetrics || !loserMetrics) {
+        return { error: 'One or both users not found.' }
+    }
+
+    const winnerEloBefore = winnerMetrics.eloRating
+    const loserEloBefore = loserMetrics.eloRating
+    const { newWinnerRating, newLoserRating } = calculateElo(winnerEloBefore, loserEloBefore)
+
+    await Promise.all([
+        prisma.githubMetrics.update({
+            where: { userId: winnerId },
+            data: { eloRating: newWinnerRating },
+        }),
+        prisma.githubMetrics.update({
+            where: { userId: loserId },
+            data: { eloRating: newLoserRating },
+        }),
+        prisma.eloMatch.create({
+            data: {
+                winnerId,
+                loserId,
+                voterId,
+                winnerEloBefore,
+                loserEloBefore,
+                winnerEloAfter: newWinnerRating,
+                loserEloAfter: newLoserRating,
+            },
+        }),
+    ])
+
+    return {
+        winnerId,
+        loserId,
+        winnerEloBefore,
+        loserEloBefore,
+        winnerEloAfter: newWinnerRating,
+        loserEloAfter: newLoserRating,
+    }
 }

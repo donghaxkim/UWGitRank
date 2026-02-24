@@ -46,10 +46,13 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
         l.commits_1y,
         l.prs_1y,
         l.score_1y,
-        COALESCE(ec.cnt, 0)::int AS endorsement_count
+        COALESCE(ec.cnt, 0)::int AS endorsement_count,
+        COALESCE(gm.elo_rating, 1200)::float AS elo_rating
       FROM public.leaderboard l
       LEFT JOIN public.profiles p
         ON p.username = l.username
+      LEFT JOIN public.github_metrics gm
+        ON gm.user_id = p.id
       LEFT JOIN (
         SELECT target_user_id, COUNT(*)::int AS cnt
         FROM public.endorsements
@@ -83,7 +86,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
       LEFT JOIN public.profiles p
         ON p.username = l.username
     `;
-    return rows.map((r) => ({ ...r, endorsement_count: 0 }));
+    return rows.map((r) => ({ ...r, endorsement_count: 0, elo_rating: 1200 }));
   }
 }
 

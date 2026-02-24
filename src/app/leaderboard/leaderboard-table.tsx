@@ -268,6 +268,7 @@ export function LeaderboardTable({
                   <TableHead>Contributor</TableHead>
                   <TableHead>Program</TableHead>
                   <TableHead className="text-center w-[100px]">Endorse</TableHead>
+                  <TableHead className="text-right w-[80px]">ELO</TableHead>
                   <TableHead className="text-right">Rank Score</TableHead>
                 </TableRow>
               </TableHeader>
@@ -275,7 +276,7 @@ export function LeaderboardTable({
                 {tableEntries.length === 0 ? (
                   <TableRow className="border-zinc-200 hover:bg-transparent">
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="h-24 text-center text-muted-foreground"
                     >
                       {filtered.length === 0
@@ -374,6 +375,10 @@ export function LeaderboardTable({
                               )
                             }
                           />
+                        </TableCell>
+
+                        <TableCell className="text-right font-mono text-sm tabular-nums text-zinc-500">
+                          {Math.round(entry.elo_rating)}
                         </TableCell>
 
                         <TableCell className="text-right">

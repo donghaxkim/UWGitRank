@@ -23,6 +23,7 @@ export interface LeaderboardEntry {
   prs_1y: number;
   score_1y: number;
   endorsement_count: number;
+  elo_rating: number;
 }
 
 export interface RankedEntry extends LeaderboardEntry {

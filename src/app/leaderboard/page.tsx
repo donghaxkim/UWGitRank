@@ -15,7 +15,7 @@ import Link from "next/link";
 import { signOut, signInToView, fetchUserEndorsements } from "@/app/auth/actions";
 import { LeaderboardTable } from "./leaderboard-table";
 import type { LeaderboardEntry } from "@/lib/leaderboard";
-import { Github } from "lucide-react";
+import { Github, Swords } from "lucide-react";
 import { VerificationSuccessBanner } from "./verification-success-banner";
 import { JoinLeaderboardDialog } from "@/components/JoinLeaderboardDialog";
 
@@ -115,6 +115,12 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
           </Link>
 
           <div className="flex items-center gap-3">
+            <Link href="/battle">
+              <Button size="sm" variant="ghost" className="cursor-pointer text-zinc-600">
+                <Swords className="w-4 h-4 mr-1" />
+                Battle
+              </Button>
+            </Link>
             <Link href="/about">
               <Button size="sm" variant="ghost" className="cursor-pointer text-zinc-600">
                 How Rankings Work

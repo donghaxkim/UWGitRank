@@ -25,6 +25,9 @@ model Profile {
   githubMetrics        GithubMetrics?
   endorsementsGiven    Endorsement[] @relation("EndorsementVoter")
   endorsementsReceived Endorsement[] @relation("EndorsementTarget")
+  eloMatchesWon        EloMatch[]    @relation("EloMatchWinner")
+  eloMatchesLost       EloMatch[]    @relation("EloMatchLoser")
+  eloMatchesVoted      EloMatch[]    @relation("EloMatchVoter")
 
   @@index([isVerified])
   @@map("profiles")
@@ -57,10 +60,13 @@ model GithubMetrics {
 
   endorsementCount Int @default(0) @map("endorsement_count")
 
+  eloRating Float @default(1200) @map("elo_rating")
+
   profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([rankScore(sort: Desc)])
   @@index([lastSynced])
+  @@index([eloRating(sort: Desc)])
   @@map("github_metrics")
 }
 
@@ -104,4 +110,27 @@ model Endorsement {
   @@index([targetUserId])
   @@index([voterId])
   @@map("endorsements")
+}
+
+// ─── ELO Matches ─────────────────────────────────────────────────
+// Records each head-to-head vote in the battle feature.
+model EloMatch {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  winnerId         String   @map("winner_id") @db.Uuid
+  loserId          String   @map("loser_id") @db.Uuid
+  voterId          String   @map("voter_id") @db.Uuid
+  winnerEloBefore  Float    @map("winner_elo_before")
+  loserEloBefore   Float    @map("loser_elo_before")
+  winnerEloAfter   Float    @map("winner_elo_after")
+  loserEloAfter    Float    @map("loser_elo_after")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  winner Profile @relation("EloMatchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
+  loser  Profile @relation("EloMatchLoser", fields: [loserId], references: [id], onDelete: Cascade)
+  voter  Profile @relation("EloMatchVoter", fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@index([winnerId])
+  @@index([loserId])
+  @@index([voterId])
+  @@map("elo_matches")
 }

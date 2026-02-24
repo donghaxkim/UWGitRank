@@ -120,7 +120,10 @@ CREATE TABLE IF NOT EXISTS public.github_metrics (
   score_1y     DOUBLE PRECISION NOT NULL DEFAULT 0,
 
   -- Peer endorsement count (updated by toggleEndorsement server action)
-  endorsement_count INTEGER NOT NULL DEFAULT 0
+  endorsement_count INTEGER NOT NULL DEFAULT 0,
+
+  -- ELO rating for head-to-head battles (default 1200)
+  elo_rating DOUBLE PRECISION NOT NULL DEFAULT 1200
 );
 
 -- Index: leaderboard sorting by score (descending)
@@ -130,6 +133,10 @@ CREATE INDEX IF NOT EXISTS github_metrics_rank_score_desc_idx
 -- Index: sync freshness
 CREATE INDEX IF NOT EXISTS github_metrics_last_synced_idx
   ON public.github_metrics (last_synced);
+
+-- Index: ELO leaderboard sorting
+CREATE INDEX IF NOT EXISTS github_metrics_elo_rating_desc_idx
+  ON public.github_metrics (elo_rating DESC);
 
 -- RLS (Prisma bypasses RLS via direct connection, but keep policies for
 -- any Supabase-client access)
@@ -250,7 +257,60 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 
--- ─── 6. Leaderboard Materialized View ────────────────────────────────────
+-- ─── 6. ELO Matches ────────────────────────────────────────────────────────
+-- Records each head-to-head vote in the battle feature.
+
+CREATE TABLE IF NOT EXISTS public.elo_matches (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  winner_id         UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  loser_id          UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  voter_id          UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  winner_elo_before DOUBLE PRECISION NOT NULL,
+  loser_elo_before  DOUBLE PRECISION NOT NULL,
+  winner_elo_after  DOUBLE PRECISION NOT NULL,
+  loser_elo_after   DOUBLE PRECISION NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS elo_matches_winner_id_idx
+  ON public.elo_matches (winner_id);
+
+CREATE INDEX IF NOT EXISTS elo_matches_loser_id_idx
+  ON public.elo_matches (loser_id);
+
+CREATE INDEX IF NOT EXISTS elo_matches_voter_id_idx
+  ON public.elo_matches (voter_id);
+
+ALTER TABLE public.elo_matches ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can read all elo matches"
+    ON public.elo_matches FOR SELECT
+    TO authenticated
+    USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Service role full access to elo matches"
+    ON public.elo_matches FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Backend full access to elo matches"
+    ON public.elo_matches FOR ALL
+    TO postgres
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
+-- ─── 7. Leaderboard Materialized View ─────────────────────────────────────
 -- Joins verified profiles with their metrics for fast leaderboard reads.
 -- Refreshed by the sync cron via refresh_leaderboard().
 
@@ -274,7 +334,8 @@ SELECT
   m.commits_1y,
   m.prs_1y,
   m.score_1y,
-  m.endorsement_count
+  m.endorsement_count,
+  m.elo_rating
 FROM public.profiles p
 JOIN public.github_metrics m ON p.id = m.user_id
 WHERE p.is_verified = true;
@@ -288,7 +349,7 @@ GRANT SELECT ON public.leaderboard TO anon;
 GRANT SELECT ON public.leaderboard TO authenticated;
 
 
--- ─── 7. Refresh Function ─────────────────────────────────────────────────
+-- ─── 8. Refresh Function ─────────────────────────────────────────────────
 -- Called by the /api/sync cron route via prisma.$executeRaw.
 
 CREATE OR REPLACE FUNCTION public.refresh_leaderboard()
