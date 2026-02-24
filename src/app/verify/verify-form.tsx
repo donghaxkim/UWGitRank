@@ -57,7 +57,7 @@ export function VerifyForm() {
         setError(null)
         startTransition(async () => {
             const result = await verifyStudentEmail(null, formData)
-            if (result.error) {
+            if ('error' in result && result.error) {
                 setError(result.error)
             } else if ('autoVerified' in result && result.autoVerified) {
                 router.push('/leaderboard?verified=1')
