@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "radix-ui";
-import { X, Github, Star, GitPullRequest, GitCommit } from "lucide-react";
+import { X, Github, Star, GitPullRequest, GitCommit, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AboutModal() {
@@ -72,8 +72,8 @@ export function AboutModal() {
                 UW GitRank is a leaderboard that ranks University of Waterloo
                 students by their open-source impact on GitHub. We pull data
                 from the GitHub API and score contributions using stars, merged
-                pull requests, and commits to give you a snapshot of who&apos;s
-                making waves in open source.
+                pull requests, commits, and peer endorsements to give you a
+                snapshot of who&apos;s making waves in open source.
               </p>
             </section>
 
@@ -95,15 +95,18 @@ export function AboutModal() {
                 <p>
                   <span className="text-green-300">commits</span> × 1
                 </p>
+                <p>
+                  <span className="text-pink-300">endorsements</span> × 3
+                </p>
               </div>
               <p className="text-zinc-500 text-xs mt-2">
-                Stars count on non-forked repos you own. Data syncs nightly from
-                GitHub.
+                Stars count on non-forked repos you own. GitHub data syncs
+                nightly. Endorsements update in real-time.
               </p>
             </section>
 
             {/* Metrics quick ref */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="bg-white rounded-xl p-3 border border-zinc-200">
                 <Star className="w-4 h-4 text-yellow-600 mb-1" />
                 <p className="font-medium text-zinc-900">Stars</p>
@@ -118,6 +121,11 @@ export function AboutModal() {
                 <GitCommit className="w-4 h-4 text-green-600 mb-1" />
                 <p className="font-medium text-zinc-900">Commits</p>
                 <p className="text-xs text-zinc-500">×1 pt</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-zinc-200">
+                <Heart className="w-4 h-4 text-pink-600 mb-1" />
+                <p className="font-medium text-zinc-900">Endorsements</p>
+                <p className="text-xs text-zinc-500">×3 pts</p>
               </div>
             </div>
 
