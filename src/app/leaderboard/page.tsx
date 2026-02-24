@@ -116,7 +116,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
           <div className="flex items-center gap-3">
             <Link href="/battle">
-              <Button size="sm" variant="ghost" className="cursor-pointer text-zinc-600">
+              <Button size="sm" className="cursor-pointer bg-zinc-900 text-[#EAB308] hover:bg-zinc-800 border border-zinc-700 font-semibold">
                 <Swords className="w-4 h-4 mr-1" />
                 Battle
               </Button>
