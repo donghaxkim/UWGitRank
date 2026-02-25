@@ -96,7 +96,7 @@ query($username: String!, $prCursor: String) {
 
 // Query for windowed commits from repos with 3+ stars
 const windowedRepositoriesQuery = `
-query($username: String!, $from: DateTime!, $to: DateTime!) {
+query($username: String!, $from: GitTimestamp!, $to: GitTimestamp!) {
   user(login: $username) {
     repositories(first: 100, ownerAffiliations: OWNER, isFork: false) {
       nodes {
