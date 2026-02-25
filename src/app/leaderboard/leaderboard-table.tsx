@@ -245,6 +245,9 @@ export function LeaderboardTable({
                 const entry = podiumEntries.find((e) => e.username === username);
                 if (entry) handleEndorse(username, getEffectiveCount(entry));
               }}
+              onShare={(entry, rank) => {
+                setShareDialogEntry({ entry, rank });
+              }}
             />
           </motion.div>
         )}
