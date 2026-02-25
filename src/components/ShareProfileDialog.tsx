@@ -13,6 +13,7 @@ interface ShareProfileDialogProps {
     entry: LeaderboardEntry;
     rank: number;
     timeWindow: TimeWindow;
+    urlParam?: "profile" | "battleProfile";
 }
 
 function getDisplayName(entry: LeaderboardEntry): string {
@@ -26,6 +27,7 @@ export function ShareProfileDialog({
     entry,
     rank,
     timeWindow,
+    urlParam = "profile",
 }: ShareProfileDialogProps) {
     const [copied, setCopied] = useState(false);
 
@@ -35,7 +37,7 @@ export function ShareProfileDialog({
     const score = Math.round(getWindowScore(entry, timeWindow));
     const elo = Math.round(entry.elo_rating);
     const stats = getWindowStats(entry, timeWindow);
-    const profileUrl = `https://uwgitrank.com/leaderboard?profile=${entry.username}`;
+    const profileUrl = `https://uwgitrank.com/leaderboard?${urlParam}=${entry.username}`;
 
     const shareText = `I'm ranked #${rank} on UW GitRank! 🚀\n\nELO: ${elo} | Score: ${score.toLocaleString()}\nCheck out the leaderboard:`;
 

@@ -126,7 +126,7 @@ export function BattleProfileModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div key="battle-profile-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -393,6 +393,7 @@ export function BattleProfileModal({
                 entry={entry}
                 rank={(entry as any).rank || 0}
                 timeWindow="all"
+                urlParam="battleProfile"
             />
         </AnimatePresence>
     );
@@ -501,7 +502,7 @@ function SimpleEloTimeline({
                     {yTickValues.map((value, idx) => {
                         const y = yScale(value);
                         return (
-                            <g key={idx}>
+                            <g key={`yaxis-${idx}`}>
                                 <line
                                     x1={marginLeft}
                                     y1={y}
@@ -555,7 +556,7 @@ function SimpleEloTimeline({
                         const y = yScale(point.elo);
                         return (
                             <motion.g
-                                key={idx}
+                                key={`point-${idx}`}
                                 initial={{ opacity: 0, scale: 0 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.5 + idx * 0.02 }}

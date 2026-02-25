@@ -225,6 +225,7 @@ export function Podium({
             {/* 2nd place — left */}
             {second ? (
                 <PodiumCard
+                    key={second.username}
                     entry={second}
                     place={2}
                     timeWindow={timeWindow}
@@ -233,11 +234,12 @@ export function Podium({
                     onBattleStats={() => onBattleStats(second)}
                 />
             ) : (
-                <div className="w-20 sm:w-28" />
+                <div key="podium-2nd" className="w-20 sm:w-28" />
             )}
 
             {/* 1st place — center */}
             <PodiumCard
+                key={first.username}
                 entry={first}
                 place={1}
                 timeWindow={timeWindow}
@@ -249,6 +251,7 @@ export function Podium({
             {/* 3rd place — right */}
             {third ? (
                 <PodiumCard
+                    key={third.username}
                     entry={third}
                     place={3}
                     timeWindow={timeWindow}
@@ -257,7 +260,7 @@ export function Podium({
                     onBattleStats={() => onBattleStats(third)}
                 />
             ) : (
-                <div className="w-20 sm:w-28" />
+                <div key="podium-3rd" className="w-20 sm:w-28" />
             )}
         </div>
     );

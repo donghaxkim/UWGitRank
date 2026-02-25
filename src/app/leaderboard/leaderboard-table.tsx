@@ -59,12 +59,14 @@ export function LeaderboardTable({
   isVerified = false,
   endorsedUsernames = [],
   highlightUsername,
+  battleProfileUsername,
 }: {
   data: LeaderboardEntry[];
   currentUserUsername?: string;
   isVerified?: boolean;
   endorsedUsernames?: string[];
   highlightUsername?: string;
+  battleProfileUsername?: string;
 }) {
   const [query, setQuery] = useState("");
   const [facultyFilter, setFacultyFilter] = useState<Faculty | null>(null);
@@ -93,6 +95,18 @@ export function LeaderboardTable({
       }
     }
   }, [highlightUsername]);
+
+  // Open battle profile modal if battleProfileUsername is provided
+  useEffect(() => {
+    if (battleProfileUsername && data.length > 0) {
+      const entry = data.find((e) => e.username === battleProfileUsername);
+      if (entry) {
+        setTimeout(() => {
+          setBattleProfileEntry(entry);
+        }, 500);
+      }
+    }
+  }, [battleProfileUsername, data]);
 
   // Reset sort when time window changes
   useEffect(() => {

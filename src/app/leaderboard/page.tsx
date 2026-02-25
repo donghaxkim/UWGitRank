@@ -28,6 +28,7 @@ type PageProps = {
         verified?: string;
         auth_error?: string;
         profile?: string;
+        battleProfile?: string;
     }>;
 };
 
@@ -35,6 +36,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
     const params = await searchParams;
     const showVerifiedSuccess = params.verified === "1";
     const profileUsername = params.profile;
+    const battleProfileUsername = params.battleProfile;
     const authErrorMessage =
         params.auth_error === "signup_required"
             ? "No account found. Please sign up first."
@@ -215,6 +217,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
                         isVerified={isVerified}
                         endorsedUsernames={endorsedUsernames}
                         highlightUsername={profileUsername}
+                        battleProfileUsername={battleProfileUsername}
                     />
                 </FadeIn>
             </main>

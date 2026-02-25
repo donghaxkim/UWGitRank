@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     }
 
     const chunkResults = await Promise.allSettled(
-      chunk.map(async (user) => {
+      chunk.map(async (user: { id: string; githubUsername: string | null }) => {
         if (!user.githubUsername) throw new Error("missing github_username");
         const data = await fetchGitHubData(user.githubUsername);
 
