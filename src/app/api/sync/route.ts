@@ -26,12 +26,17 @@ export async function GET(request: Request) {
     });
   }
 
-  const CHUNK_SIZE = 50;
+  const CHUNK_SIZE = 5; // Nuke concurrent reqs
   const results: { username: string | null; status: string }[] = [];
 
   // 2. Process users in parallel chunks to avoid Vercel timeouts
   for (let i = 0; i < users.length; i += CHUNK_SIZE) {
     const chunk = users.slice(i, i + CHUNK_SIZE);
+
+    // GitHub rate limiting
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+    }
 
     const chunkResults = await Promise.allSettled(
       chunk.map(async (user) => {
