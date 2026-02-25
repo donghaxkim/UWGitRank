@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useTransition, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BadgeCheck, Heart } from "lucide-react";
+import { Search, BadgeCheck, Heart, Share2 } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { Input } from "@/components/ui/input";
+import { ShareProfileDialog } from "@/components/ShareProfileDialog";
 import {
   Table,
   TableBody,
@@ -71,6 +72,7 @@ export function LeaderboardTable({
   const [countOverrides, setCountOverrides] = useState<Record<string, number>>(
     {},
   );
+  const [shareDialogEntry, setShareDialogEntry] = useState<{ entry: LeaderboardEntry; rank: number } | null>(null);
   const [, startTransition] = useTransition();
 
   const handleEndorse = useCallback(
@@ -266,13 +268,14 @@ export function LeaderboardTable({
                   <TableHead className="text-center w-[100px]">Endorse</TableHead>
                   <TableHead className="text-right w-[80px]">ELO</TableHead>
                   <TableHead className="text-right">Rank Score</TableHead>
+                  <TableHead className="text-center w-[60px]">Share</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tableEntries.length === 0 ? (
                   <TableRow className="border-zinc-200 hover:bg-transparent">
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="h-24 text-center text-muted-foreground"
                     >
                       {filtered.length === 0
@@ -393,6 +396,16 @@ export function LeaderboardTable({
                             timeWindow={timeWindow}
                           />
                         </TableCell>
+
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => setShareDialogEntry({ entry, rank: entry.rank })}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#EAB308]/10 transition-colors group cursor-pointer"
+                            aria-label="Share profile"
+                          >
+                            <Share2 className="w-4 h-4 text-zinc-400 group-hover:text-[#EAB308] transition-colors" />
+                          </button>
+                        </TableCell>
                       </motion.tr>
                     );
                   })
@@ -402,6 +415,17 @@ export function LeaderboardTable({
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Share Profile Dialog */}
+      {shareDialogEntry && (
+        <ShareProfileDialog
+          isOpen={true}
+          onClose={() => setShareDialogEntry(null)}
+          entry={shareDialogEntry.entry}
+          rank={shareDialogEntry.rank}
+          timeWindow={timeWindow}
+        />
+      )}
     </Tooltip.Provider>
   );
 }
