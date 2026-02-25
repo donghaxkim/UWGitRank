@@ -147,29 +147,29 @@ export function LeaderboardTable({
     }));
   }, [data, getEffectiveCount]);
 
-  // Sort by selected window, assign ranks, then filter
-  const ranked: RankedEntry[] = useMemo(() => {
-    return [...effectiveData]
-      .sort(
-        (a, b) => getWindowScore(b, timeWindow) - getWindowScore(a, timeWindow),
-      )
-      .map((entry, i) => ({ ...entry, rank: i + 1 }));
+  // Sort then filter, ranks are assigned within the filtered result
+  const sorted = useMemo(() => {
+    return [...effectiveData].sort(
+      (a, b) => getWindowScore(b, timeWindow) - getWindowScore(a, timeWindow),
+    );
   }, [effectiveData, timeWindow]);
 
-  const filtered = useMemo(() => {
-    return ranked.filter((entry) => {
-      if (query) {
-        const q = query.toLowerCase();
-        const matchUsername = entry.username.toLowerCase().includes(q);
-        const matchFullName = getDisplayName(entry).toLowerCase().includes(q);
-        if (!matchUsername && !matchFullName) return false;
-      }
-      if (facultyFilter && getFaculty(entry.program) !== facultyFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [ranked, query, facultyFilter]);
+  const filtered: RankedEntry[] = useMemo(() => {
+    return sorted
+      .filter((entry) => {
+        if (query) {
+          const q = query.toLowerCase();
+          const matchUsername = entry.username.toLowerCase().includes(q);
+          const matchFullName = getDisplayName(entry).toLowerCase().includes(q);
+          if (!matchUsername && !matchFullName) return false;
+        }
+        if (facultyFilter && getFaculty(entry.program) !== facultyFilter) {
+          return false;
+        }
+        return true;
+      })
+      .map((entry, i) => ({ ...entry, rank: i + 1 }));
+  }, [sorted, query, facultyFilter]);
 
   const podiumEntries = filtered.slice(0, 3);
   const tableEntries = filtered.slice(3);
