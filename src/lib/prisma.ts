@@ -7,7 +7,17 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL environment variable is not set");
+    // Return a dummy proxy so the module can be imported without DATABASE_URL.
+    // Any actual Prisma call will throw, but callers should short-circuit
+    // (e.g. fetchLeaderboard returns mock data when DATABASE_URL is unset).
+    return new Proxy({} as PrismaClient, {
+      get(_, prop) {
+        if (prop === "then") return undefined; // not a thenable
+        return () => {
+          throw new Error("DATABASE_URL is not set — cannot use Prisma");
+        };
+      },
+    });
   }
   // Supabase pooler: username must be postgres.[PROJECT_REF], not just "postgres",
   // or you get "Tenant or user not found". Use the connection string from the dashboard.

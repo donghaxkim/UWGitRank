@@ -9,7 +9,8 @@ export async function createClient() {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your-project-url' || supabaseAnonKey === 'your-anon-key') {
-        throw new Error('Missing or invalid Supabase environment variables. Please check your .env.local file.')
+        // Return a stub client so the app renders without Supabase env vars (local dev)
+        return { auth: { getUser: async () => ({ data: { user: null }, error: null }) } } as ReturnType<typeof createServerClient>
     }
 
     return createServerClient(
