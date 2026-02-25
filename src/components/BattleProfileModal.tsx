@@ -73,7 +73,7 @@ export function BattleProfileModal({
                 (res) => res.json(),
             ),
             fetch(
-                `/api/battle-stats?username=${entry.username}&timelineOnly=true`,
+                `/api/battle-stats?username=${entry.username}&timelineOnly=true&maxPoints=100`,
             ).then((res) => res.json()),
         ])
             .then(([statsData, timelineData]) => {
@@ -126,7 +126,10 @@ export function BattleProfileModal({
 
     return (
         <AnimatePresence>
-            <div key="battle-profile-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+                key="battle-profile-modal"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -226,7 +229,7 @@ export function BattleProfileModal({
                                 {/* Stats Tab */}
                                 {activeTab === "stats" && (
                                     <div className="space-y-6">
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-rows-3 sm:grid-cols-3 sm:grid-rows-1 gap-4">
                                             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                                                 <div className="text-sm text-blue-600 font-medium">
                                                     Total Battles
@@ -250,7 +253,7 @@ export function BattleProfileModal({
                                                     Record
                                                 </div>
                                                 <div className="text-2xl font-bold text-purple-900 mt-2">
-                                                    {stats.wins}W -{" "}
+                                                    {stats.wins}W/
                                                     {stats.losses}L
                                                 </div>
                                             </div>
@@ -326,9 +329,7 @@ export function BattleProfileModal({
                                         <div className="text-sm text-zinc-600 mb-4">
                                             ELO progression over time (
                                             {timelineMatches.length} battles
-                                            {timelineMatches.length > 100 &&
-                                                " • showing 100 sampled points"}
-                                            )
+                                            sampled)
                                         </div>
                                         <SimpleEloTimeline
                                             matches={timelineMatches}
@@ -417,29 +418,7 @@ function SimpleEloTimeline({
     // Calculate ELO progression (reverse order for chronological)
     const reversedMatches = [...matches].reverse();
 
-    // Downsample to max 100 points if needed
-    const MAX_POINTS = 100;
-    let sampledMatches = reversedMatches;
-
-    if (reversedMatches.length > MAX_POINTS) {
-        const step = reversedMatches.length / MAX_POINTS;
-        sampledMatches = [];
-
-        for (let i = 0; i < MAX_POINTS; i++) {
-            const index = Math.floor(i * step);
-            sampledMatches.push(reversedMatches[index]);
-        }
-
-        // Always include the last match to show current state
-        if (
-            sampledMatches[sampledMatches.length - 1] !==
-            reversedMatches[reversedMatches.length - 1]
-        ) {
-            sampledMatches.push(reversedMatches[reversedMatches.length - 1]);
-        }
-    }
-
-    const points = sampledMatches.map((match) => {
+    const points = reversedMatches.map((match) => {
         const isWin = match.winnerId === userId;
         const elo = isWin ? match.winnerEloAfter : match.loserEloAfter;
         return {
@@ -581,17 +560,15 @@ function SimpleEloTimeline({
                         fontSize="12"
                         fill="#71717a"
                     >
-                        Battle Timeline (oldest → newest)
+                        Battle Timeline
                     </text>
                 </svg>
             </div>
 
             <div className="flex items-center justify-between text-xs text-zinc-500">
                 <span>
-                    {reversedMatches.length > MAX_POINTS
-                        ? `${points.length} points (from ${reversedMatches.length} battles)`
-                        : `${points.length} battles`}{" "}
-                    • Range: {minElo.toFixed(0)} - {maxElo.toFixed(0)}
+                    {points.length} battles • Range: {minElo.toFixed(0)} -{" "}
+                    {maxElo.toFixed(0)}
                 </span>
                 <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
@@ -629,7 +606,7 @@ function BattleLogEntry({
                     : "border-red-200 bg-red-50/50"
             }`}
         >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 items-center sm:flex-row sm:gap-0">
                 <div className="flex items-center gap-3 flex-1">
                     <div
                         className={`px-3 py-1 rounded-full text-sm font-bold ${
@@ -683,7 +660,7 @@ function BattleLogEntry({
                 </div>
             </div>
 
-            <div className="text-xs text-zinc-500 mt-2">
+            <div className="w-full text-center text-xs text-zinc-500 mt-2">
                 {new Date(match.createdAt).toLocaleString()}
             </div>
         </div>

@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const timelineOnly = request.nextUrl.searchParams.get('timelineOnly') === 'true'
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '100')
     const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0')
+    const maxPoints = Math.min(100, parseInt(request.nextUrl.searchParams.get('maxPoints') || '100'))
 
     if (!username) {
       return NextResponse.json({ error: 'username required' }, { status: 400 })
@@ -41,9 +42,33 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       })
 
+      // Downsample if needed
+      let matches = allMatches
+      if (allMatches.length > maxPoints) {
+        const step = allMatches.length / maxPoints
+        matches = []
+
+        // Check if the last element will naturally be included
+        const lastIndex = Math.floor((maxPoints - 1) * step)
+        const lastAlreadyIncluded = lastIndex >= allMatches.length - 1
+
+        const loopCount = lastAlreadyIncluded ? maxPoints : maxPoints - 1
+
+        for (let i = 0; i < loopCount; i++) {
+          const index = Math.floor(i * step)
+          matches.push(allMatches[index])
+        }
+
+        // Only append last if not already included
+        if (!lastAlreadyIncluded) {
+          matches.push(allMatches[0])
+        }
+      }
+
       return NextResponse.json({
         userId,
-        matches: allMatches,
+        matches,
+        totalMatchCount: allMatches.length,
       })
     }
 
