@@ -45,11 +45,20 @@ export const metadata: Metadata = {
     siteName: "UW GitRank",
     title: "UW GitRank — Waterloo Student GitHub Leaderboard",
     description: seoDescription,
+    images: [
+      {
+        url: `${siteUrl}/GitHub_Invertocat_Black.svg`,
+        width: 1200,
+        height: 630,
+        alt: "UW GitRank Logo",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "UW GitRank — Waterloo Student GitHub Leaderboard",
     description: seoDescription,
+    images: [`${siteUrl}/GitHub_Invertocat_Black.svg`],
   },
   robots: {
     index: true,
