@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     description: seoDescription,
     images: [
       {
-        url: `${siteUrl}/uwgitrank-og.svg`,
+        url: `${siteUrl}/uwgitrank-og.jpg`,
         width: 1200,
         height: 630,
         alt: "UW GitRank Logo",
