@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, BadgeCheck, Heart, Share2, Swords } from "lucide-react";
+import { Search, BadgeCheck, Heart, Share2, Swords, ChevronUp, ChevronDown } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { Input } from "@/components/ui/input";
 import { ShareProfileDialog } from "@/components/ShareProfileDialog";
@@ -77,6 +77,8 @@ export function LeaderboardTable({
   );
   const [shareDialogEntry, setShareDialogEntry] = useState<{ entry: LeaderboardEntry; rank: number } | null>(null);
   const [battleProfileEntry, setBattleProfileEntry] = useState<LeaderboardEntry | null>(null);
+  const [sortColumn, setSortColumn] = useState<"score" | "endorsement" | "elo">("score");
+  const [sortDirection, setSortDirection] = useState<"desc" | "asc">("desc");
   const [, startTransition] = useTransition();
   const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
 
@@ -91,6 +93,21 @@ export function LeaderboardTable({
       }
     }
   }, [highlightUsername]);
+
+  // Reset sort when time window changes
+  useEffect(() => {
+    setSortColumn("score");
+    setSortDirection("desc");
+  }, [timeWindow]);
+
+  const toggleSort = useCallback((column: "score" | "endorsement" | "elo") => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection("desc");
+    }
+  }, [sortColumn]);
 
   const handleEndorse = useCallback(
     (username: string, currentCount: number) => {
@@ -149,10 +166,19 @@ export function LeaderboardTable({
 
   // Sort then filter, ranks are assigned within the filtered result
   const sorted = useMemo(() => {
-    return [...effectiveData].sort(
-      (a, b) => getWindowScore(b, timeWindow) - getWindowScore(a, timeWindow),
-    );
-  }, [effectiveData, timeWindow]);
+    const getKey = (e: LeaderboardEntry) => {
+      switch (sortColumn) {
+        case "endorsement": return e.endorsement_count;
+        case "elo":         return e.elo_rating;
+        case "score":       return getWindowScore(e, timeWindow);
+      }
+    };
+    const dir = sortDirection === "desc" ? -1 : 1;
+    return effectiveData
+      .map((e) => ({ e, k: getKey(e) }))
+      .sort((a, b) => (a.k - b.k) * dir)
+      .map(({ e }) => e);
+  }, [effectiveData, timeWindow, sortColumn, sortDirection]);
 
   const filtered: RankedEntry[] = useMemo(() => {
     return sorted
@@ -289,9 +315,51 @@ export function LeaderboardTable({
                   <TableHead className="w-[52px] sm:w-[72px]">Rank</TableHead>
                   <TableHead>Contributor</TableHead>
                   <TableHead className="hidden md:table-cell">Program</TableHead>
-                  <TableHead className="text-center w-[80px] sm:w-[100px]">Endorse</TableHead>
-                  <TableHead className="text-right w-[80px] hidden sm:table-cell">ELO</TableHead>
-                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead className="text-center w-[80px] sm:w-[100px]">
+                    <button
+                      onClick={() => toggleSort("endorsement")}
+                      className={`inline-flex items-center gap-0.5 cursor-pointer transition-colors ${
+                        sortColumn === "endorsement"
+                          ? "text-[#EAB308]"
+                          : "hover:text-[#EAB308]"
+                      }`}
+                    >
+                      Endorse
+                      {sortColumn === "endorsement" && (
+                        sortDirection === "desc" ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right w-[80px] hidden sm:table-cell">
+                    <button
+                      onClick={() => toggleSort("elo")}
+                      className={`inline-flex items-center gap-0.5 ml-auto cursor-pointer transition-colors ${
+                        sortColumn === "elo"
+                          ? "text-[#EAB308]"
+                          : "hover:text-[#EAB308]"
+                      }`}
+                    >
+                      ELO
+                      {sortColumn === "elo" && (
+                        sortDirection === "desc" ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <button
+                      onClick={() => toggleSort("score")}
+                      className={`inline-flex items-center gap-0.5 ml-auto cursor-pointer transition-colors ${
+                        sortColumn === "score"
+                          ? "text-[#EAB308]"
+                          : "hover:text-[#EAB308]"
+                      }`}
+                    >
+                      Score
+                      {sortColumn === "score" && (
+                        sortDirection === "desc" ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-center w-[50px] sm:w-[60px] hidden sm:table-cell">Share</TableHead>
                 </TableRow>
               </TableHeader>
