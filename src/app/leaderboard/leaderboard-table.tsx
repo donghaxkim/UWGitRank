@@ -277,16 +277,17 @@ export function LeaderboardTable({
             transition={{ duration: 0.25 }}
             className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm"
           >
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-zinc-200 hover:bg-transparent">
-                  <TableHead className="w-[72px]">Rank</TableHead>
+                  <TableHead className="w-[52px] sm:w-[72px]">Rank</TableHead>
                   <TableHead>Contributor</TableHead>
-                  <TableHead>Program</TableHead>
-                  <TableHead className="text-center w-[100px]">Endorse</TableHead>
-                  <TableHead className="text-right w-[80px]">ELO</TableHead>
-                  <TableHead className="text-right">Rank Score</TableHead>
-                  <TableHead className="text-center w-[60px]">Share</TableHead>
+                  <TableHead className="hidden md:table-cell">Program</TableHead>
+                  <TableHead className="text-center w-[80px] sm:w-[100px]">Endorse</TableHead>
+                  <TableHead className="text-right w-[80px] hidden sm:table-cell">ELO</TableHead>
+                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead className="text-center w-[50px] sm:w-[60px] hidden sm:table-cell">Share</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -387,7 +388,7 @@ export function LeaderboardTable({
                           </Tooltip.Root>
                         </TableCell>
 
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground hidden md:table-cell">
                           {entry.program ?? "—"}
                         </TableCell>
 
@@ -405,7 +406,7 @@ export function LeaderboardTable({
                           />
                         </TableCell>
 
-                        <TableCell className="text-right font-mono text-sm tabular-nums text-zinc-500">
+                        <TableCell className="text-right font-mono text-sm tabular-nums text-zinc-500 hidden sm:table-cell">
                           {Math.round(entry.elo_rating)}
                         </TableCell>
 
@@ -421,7 +422,7 @@ export function LeaderboardTable({
                           />
                         </TableCell>
 
-                        <TableCell className="text-center">
+                        <TableCell className="text-center hidden sm:table-cell">
                           <button
                             onClick={() => setShareDialogEntry({ entry, rank: entry.rank })}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#EAB308]/10 transition-colors group cursor-pointer"
@@ -436,6 +437,7 @@ export function LeaderboardTable({
                 )}
               </TableBody>
             </Table>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

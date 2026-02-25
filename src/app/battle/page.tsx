@@ -139,14 +139,14 @@ export default async function BattlePage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:py-10 space-y-6 sm:space-y-8">
         <FadeIn>
           <div className="text-center space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight flex items-center justify-center gap-2">
-              <Swords className="w-7 h-7 text-[#EAB308]" />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center justify-center gap-2">
+              <Swords className="w-6 h-6 sm:w-7 sm:h-7 text-[#EAB308]" />
               Battle
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Who has the better repos? Pick a winner to update their ELO rating.
             </p>
           </div>

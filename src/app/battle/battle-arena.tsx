@@ -64,7 +64,7 @@ function UserCard({
         type="button"
         onClick={onVote}
         disabled={disabled}
-        className={`cursor-pointer w-full text-left rounded-xl border-2 p-6 transition-all ${
+        className={`cursor-pointer w-full text-left rounded-xl border-2 p-4 sm:p-6 transition-all ${
           result
             ? isWinner
               ? "border-[#EAB308] bg-[#EAB308]/5"

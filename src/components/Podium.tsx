@@ -71,13 +71,13 @@ function PodiumCard({
                                 alt={entry.username}
                                 width={place === 1 ? 72 : 56}
                                 height={place === 1 ? 72 : 56}
-                                className="rounded-full border-2 border-white bg-white"
+                                className={`rounded-full border-2 border-white bg-white ${place === 1 ? "w-14 h-14 sm:w-[72px] sm:h-[72px]" : "w-11 h-11 sm:w-14 sm:h-14"}`}
                             />
                         </motion.div>
 
                         {/* Name & score */}
-                        <div className="text-center min-w-0 max-w-[120px]">
-                            <div className="font-bold text-sm truncate hover:underline">
+                        <div className="text-center min-w-0 max-w-[90px] sm:max-w-[120px]">
+                            <div className="font-bold text-xs sm:text-sm truncate hover:underline">
                                 {`${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim() ||
                                     entry.username}
                                 {isCurrentUser && (
@@ -136,7 +136,7 @@ function PodiumCard({
 
                     {/* Pedestal */}
                     <motion.div
-                        className={`w-24 sm:w-28 ${style.height} rounded-t-xl flex items-center justify-center ${style.card} origin-bottom`}
+                        className={`w-20 sm:w-28 ${style.height} rounded-t-xl flex items-center justify-center ${style.card} origin-bottom`}
                         initial={{ scaleY: 0 }}
                         animate={{ scaleY: 1 }}
                         transition={{
@@ -205,7 +205,7 @@ export function Podium({
     }
 
     return (
-        <div className="flex items-end justify-center gap-3 sm:gap-6 pt-4 pb-2">
+        <div className="flex items-end justify-center gap-2 sm:gap-6 pt-4 pb-2">
             {/* 2nd place — left */}
             {second ? (
                 <PodiumCard
@@ -216,7 +216,7 @@ export function Podium({
                     onShare={() => onShare(second, 2)}
                 />
             ) : (
-                <div className="w-24 sm:w-28" />
+                <div className="w-20 sm:w-28" />
             )}
 
             {/* 1st place — center */}
@@ -238,7 +238,7 @@ export function Podium({
                     onShare={() => onShare(third, 3)}
                 />
             ) : (
-                <div className="w-24 sm:w-28" />
+                <div className="w-20 sm:w-28" />
             )}
         </div>
     );

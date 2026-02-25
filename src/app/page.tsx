@@ -43,15 +43,15 @@ export default async function Home({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f2f2] text-zinc-900 selection:bg-yellow-100 flex flex-col items-center justify-center p-6">
-      <main className="w-full max-w-2xl flex flex-col items-center space-y-10 text-center">
+    <div className="min-h-screen bg-[#f2f2f2] text-zinc-900 selection:bg-yellow-100 flex flex-col items-center px-4 py-12 sm:p-6">
+      <main className="w-full max-w-2xl flex flex-col items-center space-y-8 sm:space-y-10 text-center flex-1 justify-center">
         {/* Hero */}
         <FadeIn>
           <div className="space-y-5">
-            <span className="text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-[#EAB308]">
+            <span className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-[#EAB308]">
               UW
             </span>
-            <span className="text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-zinc-900 inline-flex items-center">
+            <span className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-zinc-900 inline-flex items-center">
               <img
                 src="/GitHub_Invertocat_Black.svg"
                 alt=""
@@ -139,7 +139,7 @@ export default async function Home({ searchParams }: PageProps) {
       </main>
 
       {/* Footer */}
-      <FadeIn delay={0.35} y={0} className="absolute bottom-8">
+      <FadeIn delay={0.35} y={0} className="pt-10 sm:pt-16">
         <footer className="flex flex-col items-center gap-1 text-center">
           <div className="flex items-center gap-4">
             <AboutModal />

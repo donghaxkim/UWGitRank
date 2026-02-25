@@ -115,14 +115,14 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
             <span>GitRank</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/battle">
               <Button size="sm" className="cursor-pointer bg-zinc-900 text-[#EAB308] hover:bg-zinc-800 border border-zinc-700 font-semibold">
-                <Swords className="w-4 h-4 mr-1" />
-                Battle
+                <Swords className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Battle</span>
               </Button>
             </Link>
-            <Link href="/about">
+            <Link href="/about" className="hidden sm:block">
               <Button size="sm" variant="ghost" className="cursor-pointer text-zinc-600">
                 How Rankings Work
               </Button>
@@ -135,17 +135,19 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
                 <Button
                   type="button"
                   size="sm"
-                  className="cursor-pointer bg-[#EAB308] text-black hover:bg-[#D9A307] flex items-center gap-2"
+                  className="cursor-pointer bg-[#EAB308] text-black hover:bg-[#D9A307] flex items-center gap-1 sm:gap-2"
                 >
                   <Github className="w-4 h-4" />
-                  Join Leaderboard
+                  <span className="hidden sm:inline">Join Leaderboard</span>
+                  <span className="sm:hidden">Join</span>
                 </Button>
               </JoinLeaderboardDialog>
             ) : null}
             {user && (
               <form action={signOut}>
                 <button className="cursor-pointer text-xs text-zinc-400 hover:text-zinc-900 underline underline-offset-4 transition-colors">
-                  Sign out
+                  <span className="hidden sm:inline">Sign out</span>
+                  <span className="sm:hidden">Out</span>
                 </button>
               </form>
             )}

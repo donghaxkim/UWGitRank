@@ -70,7 +70,7 @@ export function ShareProfileDialog({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: "spring", duration: 0.3 }}
-                    className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                    className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden mx-4 sm:mx-0"
                 >
                     {/* Close button */}
                     <button
@@ -81,7 +81,7 @@ export function ShareProfileDialog({
                     </button>
 
                     {/* Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
                         <div>
                             <h2 className="text-2xl font-bold text-zinc-900">
                                 Share Profile
@@ -92,15 +92,15 @@ export function ShareProfileDialog({
                         </div>
 
                         {/* Visual Card Preview */}
-                        <div className="bg-gradient-to-br from-[#EAB308] to-[#D9A307] rounded-xl p-6 text-white shadow-lg">
-                            <div className="flex items-start gap-4">
+                        <div className="bg-gradient-to-br from-[#EAB308] to-[#D9A307] rounded-xl p-4 sm:p-6 text-white shadow-lg">
+                            <div className="flex items-start gap-3 sm:gap-4">
                                 <img
                                     src={`https://github.com/${entry.username}.png`}
                                     alt={displayName}
-                                    className="w-16 h-16 rounded-full border-4 border-white/20"
+                                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-white/20"
                                 />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-xl truncate">
+                                    <h3 className="font-bold text-lg sm:text-xl truncate">
                                         {displayName}
                                     </h3>
                                     <p className="text-white/90 text-sm">
@@ -114,12 +114,12 @@ export function ShareProfileDialog({
                                 </div>
                             </div>
 
-                            <div className="mt-6 grid grid-cols-2 gap-4">
+                            <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-3 sm:gap-4">
                                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
                                     <div className="text-white/70 text-xs font-medium">
                                         Rank
                                     </div>
-                                    <div className="text-3xl font-bold mt-1">
+                                    <div className="text-2xl sm:text-3xl font-bold mt-1">
                                         #{rank}
                                     </div>
                                 </div>
@@ -127,7 +127,7 @@ export function ShareProfileDialog({
                                     <div className="text-white/70 text-xs font-medium">
                                         ELO
                                     </div>
-                                    <div className="text-3xl font-bold mt-1">
+                                    <div className="text-2xl sm:text-3xl font-bold mt-1">
                                         {elo}
                                     </div>
                                 </div>
