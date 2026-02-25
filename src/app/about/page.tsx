@@ -177,7 +177,7 @@ export default function AboutPage() {
                 star counts.
               </p>
               <ul className="text-xs text-zinc-400 space-y-1 pl-4 list-disc">
-                <li>Includes commits to any public repo</li>
+                <li>Includes commits to any public repo with 3+ stars</li>
                 <li>Lowest individual weight but compounds over time</li>
                 <li>Private repo commits are not counted</li>
               </ul>
