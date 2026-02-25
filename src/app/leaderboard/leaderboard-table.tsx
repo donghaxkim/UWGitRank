@@ -329,19 +329,19 @@ export function LeaderboardTable({
                                   className="rounded-full border border-zinc-200 transition-opacity group-hover:opacity-80"
                                 />
                                 <span className="min-w-0">
-                                  <span className="block font-medium truncate group-hover:underline">
+                                  <span className="flex justify-start items-center font-medium truncate group-hover:underline gap-1">
                                     {getDisplayName(entry)}
                                     {isCurrentUser && (
                                       <span className="text-primary font-semibold"> (you)</span>
+                                    )}
+                                    {entry.is_verified && (
+                                      <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
                                     )}
                                   </span>
                                   <span className="block text-xs text-muted-foreground">
                                     @{entry.username}
                                   </span>
                                 </span>
-                                {entry.is_verified && (
-                                  <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
-                                )}
                               </a>
                             </Tooltip.Trigger>
                             <Tooltip.Portal>
